@@ -1331,8 +1331,8 @@ Then push to `main` once → CI deploys everything else.
 - [ ] CSRF: APIs only accept `Bearer` tokens, no cookie-auth state-changing endpoints
 - [ ] CORS: API allows only `https://abhiyadav.in`
 - [ ] Rate limit middleware: 60 req/min/IP for unauth, 600 req/min/user for auth, 5/min for `/auth/login` and `/auth/signup`
-- [ ] Resume upload: enforce `application/pdf`, max 8 MB, reject if pdftotext returns empty (likely scanned image)
-- [ ] No path traversal in resume storage path (use UUIDs)
+- [x] Resume upload: enforce `application/pdf`, max 8 MB, reject if pdftotext returns empty (likely scanned image)
+- [x] No path traversal in resume storage path (use UUIDs)
 - [ ] Postgres + Redis are not published to host ports in prod; only API publishes `127.0.0.1:8080`
 - [ ] Docker user is non-root in all images
 - [ ] `email_denylist` honored everywhere a send is enqueued AND before send
@@ -1357,7 +1357,7 @@ Agent must verify each box before moving to next phase.
 ### Phase 1 — Auth + SMTP + Resume + Preferences
 - [x] Signup, login, refresh, logout work end-to-end
 - [ ] `POST /api/smtp` stores AES-GCM ciphertext; verify endpoint succeeds against Gmail app password and a custom server
-- [ ] Resume upload validates PDF, runs pdftotext, stores file + parsed text
+- [x] Resume upload validates PDF, runs pdftotext, stores file + parsed text
 - [ ] Preferences CRUD round-trips arrays and tone preset
 
 ### Phase 2 — Job scraping

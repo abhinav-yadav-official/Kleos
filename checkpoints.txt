@@ -81,3 +81,9 @@ Files changed: cmd/api/main.go, internal/config/*, internal/http/*, internal/res
 Commands run: go test ./internal/http (red then green); go test ./internal/resume (red then green); make test; make build; make lint; bash -n deploy/deploy.sh; git diff --check.
 Verification: local tests pass, build passes, vet passes, deploy script syntax passes. Runtime image now installs poppler-utils and deploy creates/chowns /opt/kleos/data/resumes for container UID 10001.
 Open context: push resume slice, wait for CI/deploy, then verify live POST /api/resumes with a generated PDF before checking the Phase 1 resume acceptance box.
+
+2026-05-21 13:23:29 IST | Phase 1 resume live verified | Deployed resume upload/parse/storage and checked the Phase 1 resume acceptance box.
+Files changed: plan.md, checkpoints.txt.
+Commands run: gh run watch 26212880950 --exit-status; gh run watch 26212880995 --exit-status; ghostscript-generated PDF upload via curl; GET /api/resumes; POST /api/resumes/{id}/activate; ssh deploy@abhiyadav.in docker exec psql storage_path/parsed_text query; docker exec kleos-api-1 test -s storage_path; DELETE /api/resumes/{id}; docker exec kleos-api-1 test -e storage_path.
+Verification: CI run 26212880950 passed vet, golangci-lint, race tests, and build. Deploy run 26212880995 passed. Live check returned resume-live-ok for throwaway user resume-1779349994@example.com with resume c3fa1845-badb-4034-a4cd-e65ca5ba6723 and parsed_len=92. The generated PDF was stored, parsed, listed, activated, and deleted; file removal after delete was verified in the API container.
+Open context: next unchecked Phase 1 slice is Preferences CRUD. SMTP external verification still needs real Gmail/custom SMTP credentials.
