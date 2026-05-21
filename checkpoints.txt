@@ -117,3 +117,9 @@ Files changed: plan.md, checkpoints.txt.
 Commands run: grep password presence check without printing value; curl signup; curl POST /api/smtp with smtp.forwardemail.net:465, username me@abhiyadav.in, use_tls=true; curl POST /api/smtp/{id}/verify; curl GET /api/smtp; ssh deploy@abhiyadav.in docker exec psql verified_at/last_error/password_cipher/password_nonce query; psql DELETE test user.
 Verification: live check returned smtp-forwardemail-live-ok for throwaway user smtp-forwardemail-1779353112@example.com with credential c8037f78-6dd7-4ad4-a9c9-636836177332; verify returned ok=true; create/list responses did not include the SMTP password; database row had verified_at set, empty last_error, non-empty ciphertext, and 12-byte nonce.
 Open context: custom SMTP server half of Phase 1 SMTP acceptance is complete. Gmail app-password verification is still pending; do not check the Phase 1 SMTP box until a Gmail SMTP credential is supplied and verified.
+
+2026-05-21 21:23:42 IST | Progress + Health dashboard design approved | Captured the approved operator dashboard direction in a design spec.
+Files changed: docs/superpowers/specs/2026-05-21-progress-health-dashboard-design.md, .gitignore, plan.md, checkpoints.txt.
+Commands run: visual companion at http://localhost:65308; git status --short; date; git diff -- plan.md.
+Verification: user selected Operator Dashboard, then narrowed scope to Progress + Health and approved the design. Added .superpowers/ to .gitignore and fixed accidental plan.md heading prefix.
+Open context: user should review the design spec before implementation planning. Next step after review is writing an implementation plan, then building the static dashboard and reorganizing plan.md.
