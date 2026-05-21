@@ -10,6 +10,9 @@ func TestLoadReadsConfiguredValues(t *testing.T) {
 	t.Setenv("REDIS_PASSWORD", "secret")
 	t.Setenv("LOG_DIR", "/tmp/kleos-logs")
 	t.Setenv("LOG_LEVEL", "debug")
+	t.Setenv("JWT_SECRET", "jwt-secret")
+	t.Setenv("JWT_ACCESS_TTL", "10m")
+	t.Setenv("JWT_REFRESH_TTL", "24h")
 
 	cfg := Load()
 
@@ -33,6 +36,15 @@ func TestLoadReadsConfiguredValues(t *testing.T) {
 	}
 	if cfg.LogLevel != "debug" {
 		t.Fatalf("LogLevel = %q, want debug", cfg.LogLevel)
+	}
+	if cfg.JWTSecret != "jwt-secret" {
+		t.Fatalf("JWTSecret = %q, want jwt-secret", cfg.JWTSecret)
+	}
+	if cfg.JWTAccessTTL != "10m" {
+		t.Fatalf("JWTAccessTTL = %q, want 10m", cfg.JWTAccessTTL)
+	}
+	if cfg.JWTRefreshTTL != "24h" {
+		t.Fatalf("JWTRefreshTTL = %q, want 24h", cfg.JWTRefreshTTL)
 	}
 }
 

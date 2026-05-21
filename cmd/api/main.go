@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/abhinav-yadav-official/Kleos/internal/auth"
 	"github.com/abhinav-yadav-official/Kleos/internal/config"
 	"github.com/abhinav-yadav-official/Kleos/internal/db"
 	apphttp "github.com/abhinav-yadav-official/Kleos/internal/http"
@@ -32,9 +33,21 @@ func main() {
 		}
 	}()
 
+	accessTTL, err := time.ParseDuration(cfg.JWTAccessTTL)
+	if err != nil {
+		slog.Error("parse JWT_ACCESS_TTL", "error", err)
+		os.Exit(1)
+	}
+	refreshTTL, err := time.ParseDuration(cfg.JWTRefreshTTL)
+	if err != nil {
+		slog.Error("parse JWT_REFRESH_TTL", "error", err)
+		os.Exit(1)
+	}
+	authService := auth.NewService(postgres.Pool(), cfg.JWTSecret, accessTTL, refreshTTL)
+
 	server := &http.Server{
 		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient}),
+		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

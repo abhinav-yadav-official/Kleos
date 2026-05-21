@@ -14,6 +14,7 @@ type Pinger interface {
 type Dependencies struct {
 	DB    Pinger
 	Redis Pinger
+	Auth  AuthService
 }
 
 func NewRouter(deps Dependencies) http.Handler {
@@ -38,6 +39,10 @@ func NewRouter(deps Dependencies) http.Handler {
 		}
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	})
+
+	if deps.Auth != nil {
+		registerAuthRoutes(r, deps.Auth)
+	}
 
 	return r
 }

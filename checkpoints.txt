@@ -51,3 +51,9 @@ Files changed: plan.md, checkpoints.txt.
 Commands run: gh run watch 26211314076 --exit-status; gh run watch 26211313854 --exit-status; curl -fsS https://abhiyadav.in/kleos/api/healthz; curl -fsS https://abhiyadav.in/kleos/api/readyz; gh run list --limit 5.
 Verification: CI run 26211314076 passed vet, golangci-lint, race tests, and build; deploy run 26211313854 passed; public healthz and readyz both returned {"ok":true}. Phase 0 acceptance boxes are now checked in plan.md.
 Open context: GitHub repo is private at https://github.com/abhinav-yadav-official/Kleos. Latest successful deployed commit before this docs-only checkpoint is 4e082b0. GitHub Actions emits Node.js 20 deprecation warnings for actions/checkout@v4, setup-go@v5, and golangci-lint-action@v6; not blocking yet.
+
+2026-05-21 12:54:37 IST | Phase 1 auth slice | Added auth password/JWT primitives, auth HTTP routes, and Postgres-backed auth service wired into API.
+Files changed: cmd/api/main.go, internal/auth/*, internal/config/config.go, internal/config/config_test.go, internal/db/postgres.go, internal/http/*, go.mod, go.sum, checkpoints.txt.
+Commands run: go test ./internal/auth ./internal/http; go mod tidy -go=1.23.0; make test; make build; make lint; nc -z 127.0.0.1 5433; nc -z 127.0.0.1 6380.
+Verification: auth tests failed first for missing APIs, then passed after implementation; make test/build/lint passed. Local DB-backed HTTP auth flow not run because local Docker/OrbStack API is unavailable and dev ports 5433/6380 are closed.
+Open context: push auth slice and verify signup/login/refresh/me/logout against VPS after deployment.

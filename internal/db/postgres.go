@@ -28,3 +28,7 @@ func (p *Postgres) Ping() error {
 func (p *Postgres) Close() {
 	p.pool.Close()
 }
+
+func (p *Postgres) Pool() *pgxpool.Pool {
+	return p.pool
+}

@@ -11,6 +11,9 @@ type Config struct {
 	RedisPassword string
 	LogDir        string
 	LogLevel      string
+	JWTSecret     string
+	JWTAccessTTL  string
+	JWTRefreshTTL string
 }
 
 func Load() Config {
@@ -23,6 +26,9 @@ func Load() Config {
 		RedisPassword: getenv("REDIS_PASSWORD", ""),
 		LogDir:        getenv("LOG_DIR", "./logs"),
 		LogLevel:      getenv("LOG_LEVEL", "info"),
+		JWTSecret:     getenv("JWT_SECRET", "dev-secret-change-me"),
+		JWTAccessTTL:  getenv("JWT_ACCESS_TTL", "15m"),
+		JWTRefreshTTL: getenv("JWT_REFRESH_TTL", "720h"),
 	}
 }
 
