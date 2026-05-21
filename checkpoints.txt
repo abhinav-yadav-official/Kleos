@@ -87,3 +87,9 @@ Files changed: plan.md, checkpoints.txt.
 Commands run: gh run watch 26212880950 --exit-status; gh run watch 26212880995 --exit-status; ghostscript-generated PDF upload via curl; GET /api/resumes; POST /api/resumes/{id}/activate; ssh deploy@abhiyadav.in docker exec psql storage_path/parsed_text query; docker exec kleos-api-1 test -s storage_path; DELETE /api/resumes/{id}; docker exec kleos-api-1 test -e storage_path.
 Verification: CI run 26212880950 passed vet, golangci-lint, race tests, and build. Deploy run 26212880995 passed. Live check returned resume-live-ok for throwaway user resume-1779349994@example.com with resume c3fa1845-badb-4034-a4cd-e65ca5ba6723 and parsed_len=92. The generated PDF was stored, parsed, listed, activated, and deleted; file removal after delete was verified in the API container.
 Open context: next unchecked Phase 1 slice is Preferences CRUD. SMTP external verification still needs real Gmail/custom SMTP credentials.
+
+2026-05-21 13:27:46 IST | Phase 1 preferences slice implemented locally | Added authenticated preferences GET/PUT routes, default preference creation, full replace upsert, array round-trip support, enum validation, and tone addendum limit.
+Files changed: cmd/api/main.go, internal/http/*, internal/preferences/*, checkpoints.txt.
+Commands run: go test ./internal/http (red then green); go test ./internal/preferences; make test; make build; make lint; gh run list --branch main --limit 4.
+Verification: full local tests pass, build passes, vet passes. Docs-only resume checkpoint CI/deploy also passed for commit 159c39e.
+Open context: push preferences slice, wait for CI/deploy, then verify live GET/PUT /api/preferences round-trips arrays and tone preset before checking the Phase 1 preferences acceptance box.

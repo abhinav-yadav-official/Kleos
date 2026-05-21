@@ -12,11 +12,12 @@ type Pinger interface {
 }
 
 type Dependencies struct {
-	DB      Pinger
-	Redis   Pinger
-	Auth    AuthService
-	SMTP    SMTPService
-	Resumes ResumeService
+	DB          Pinger
+	Redis       Pinger
+	Auth        AuthService
+	SMTP        SMTPService
+	Resumes     ResumeService
+	Preferences PreferencesService
 }
 
 func NewRouter(deps Dependencies) http.Handler {
@@ -50,6 +51,9 @@ func NewRouter(deps Dependencies) http.Handler {
 	}
 	if deps.Auth != nil && deps.Resumes != nil {
 		registerResumeRoutes(r, deps.Auth, deps.Resumes)
+	}
+	if deps.Auth != nil && deps.Preferences != nil {
+		registerPreferencesRoutes(r, deps.Auth, deps.Preferences)
 	}
 
 	return r

@@ -15,6 +15,7 @@ import (
 	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
 	"github.com/abhinav-yadav-official/Kleos/internal/db"
 	apphttp "github.com/abhinav-yadav-official/Kleos/internal/http"
+	"github.com/abhinav-yadav-official/Kleos/internal/preferences"
 	"github.com/abhinav-yadav-official/Kleos/internal/resume"
 	"github.com/abhinav-yadav-official/Kleos/internal/smtpcred"
 )
@@ -54,10 +55,11 @@ func main() {
 	}
 	smtpService := smtpcred.NewService(postgres.Pool(), smtpCodec)
 	resumeService := resume.NewService(postgres.Pool(), cfg.ResumeStorage)
+	preferencesService := preferences.NewService(postgres.Pool())
 
 	server := &http.Server{
 		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService}),
+		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
