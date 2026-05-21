@@ -39,3 +39,9 @@ Files changed: deploy/deploy.sh, checkpoints.txt.
 Commands run: gh run view 26209469859 --log-failed; bash -n deploy/deploy.sh; make test; make build; make lint.
 Verification: failure cause confirmed in GitHub logs; deploy.sh now starts postgres/redis with `docker compose up -d --wait`; syntax/test/build/lint passed locally.
 Open context: need commit/push fix and rerun deploy workflow.
+
+2026-05-21 12:43:22 IST | Phase 0 endpoint/CI fix | Fixed public nginx API prefix and staticcheck failure.
+Files changed: cmd/migrate/main.go, deploy/nginx.location.conf, checkpoints.txt.
+Commands run: gh run view 26211127877 --log-failed; git diff --check; make test; make build; make lint; bash -n deploy/deploy.sh; ssh vps 'sudo tee /etc/nginx/snippets/kleos.locations.conf'; ssh vps 'sudo nginx -t && sudo systemctl reload nginx'; curl -i https://abhiyadav.in/kleos/api/healthz; curl -i https://abhiyadav.in/kleos/api/readyz.
+Verification: CI failure cause was staticcheck SA1019 on goose.Run; migrated to goose.RunContext. Public /kleos/api/healthz and /kleos/api/readyz both returned HTTP 200 {"ok":true} after nginx snippet update.
+Open context: need commit/push and confirm new CI/deploy runs pass.

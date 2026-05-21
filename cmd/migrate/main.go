@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 	"os"
@@ -32,7 +33,7 @@ func main() {
 		slog.Error("set goose dialect", "error", err)
 		os.Exit(1)
 	}
-	if err := goose.Run(command, db, "migrations", args...); err != nil {
+	if err := goose.RunContext(context.Background(), command, db, "migrations", args...); err != nil {
 		slog.Error("run migrations", "command", command, "error", err)
 		os.Exit(1)
 	}
