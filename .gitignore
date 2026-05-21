@@ -8,7 +8,6 @@ tmp/
 data/
 logs/
 coverage.out
-.superpowers/
 
 web/node_modules/
 web/out/
