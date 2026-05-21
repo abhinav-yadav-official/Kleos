@@ -33,3 +33,9 @@ Files changed: deploy/docker-compose.yml, deploy/Dockerfile.runtime, deploy/depl
 Commands run: chmod +x deploy/deploy.sh; git diff --check; make test; make build; make lint; bash -n deploy/deploy.sh.
 Verification: whitespace check passed; make test/build/lint passed; deploy.sh shell syntax passed.
 Open context: repo still needs remote creation/push and VPS/GitHub secret setup.
+
+2026-05-21 12:39:11 IST | Phase 0 deploy retry fix | GitHub deploy run 26209469859 failed because migrations ran before Postgres accepted TCP connections.
+Files changed: deploy/deploy.sh, checkpoints.txt.
+Commands run: gh run view 26209469859 --log-failed; bash -n deploy/deploy.sh; make test; make build; make lint.
+Verification: failure cause confirmed in GitHub logs; deploy.sh now starts postgres/redis with `docker compose up -d --wait`; syntax/test/build/lint passed locally.
+Open context: need commit/push fix and rerun deploy workflow.

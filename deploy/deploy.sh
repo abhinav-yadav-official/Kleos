@@ -12,7 +12,7 @@ docker build \
   --build-arg BINARY=api \
   "$APP_DIR/bin.new"
 
-docker compose -f "$APP_DIR/deploy/docker-compose.yml" --env-file "$APP_DIR/.env" up -d postgres redis
+docker compose -f "$APP_DIR/deploy/docker-compose.yml" --env-file "$APP_DIR/.env" up -d --wait postgres redis
 
 docker run --rm \
   --env-file "$APP_DIR/.env" \
