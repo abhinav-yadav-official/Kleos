@@ -1356,7 +1356,7 @@ Agent must verify each box before moving to next phase.
 
 ### Phase 1 — Auth + SMTP + Resume + Preferences
 - [x] Signup, login, refresh, logout work end-to-end
-- [ ] `POST /api/smtp` stores AES-GCM ciphertext; verify endpoint succeeds against Gmail app password and a custom server
+- [ ] `POST /api/smtp` stores AES-GCM ciphertext; verify endpoint succeeds against Gmail app password and a custom server (custom ForwardEmail server verified 2026-05-21; Gmail app-password verification pending)
 - [x] Resume upload validates PDF, runs pdftotext, stores file + parsed text
 - [x] Preferences CRUD round-trips arrays and tone preset
 
