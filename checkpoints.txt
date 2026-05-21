@@ -27,3 +27,9 @@ Files changed: all current foundation files.
 Commands run: git diff --check; make test; make build; make lint; git add .; git commit -m "feat: bootstrap kleos foundation".
 Verification: git diff --check passed; make test/build/lint passed immediately before commit; root commit created and amended to include this checkpoint entry.
 Open context: local main has one commit and no remote configured.
+
+2026-05-21 11:56:02 IST | Phase 0 deploy artifacts | Added production compose, runtime Dockerfile, deploy script, nginx snippet, and GitHub deploy workflow.
+Files changed: deploy/docker-compose.yml, deploy/Dockerfile.runtime, deploy/deploy.sh, deploy/nginx.location.conf, .github/workflows/deploy.yml, checkpoints.txt.
+Commands run: chmod +x deploy/deploy.sh; git diff --check; make test; make build; make lint; bash -n deploy/deploy.sh.
+Verification: whitespace check passed; make test/build/lint passed; deploy.sh shell syntax passed.
+Open context: repo still needs remote creation/push and VPS/GitHub secret setup.

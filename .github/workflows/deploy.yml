@@ -1,0 +1,70 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set TAG
+        run: echo "TAG=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache: true
+
+      - name: Build Go binaries
+        run: |
+          mkdir -p dist
+          for c in api migrate; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+              go build -ldflags="-s -w -X main.version=${TAG}" -o "dist/$c" "./cmd/$c"
+          done
+
+      - name: Stage artifacts
+        run: |
+          mkdir -p stage/{bin,migrations,deploy,web}
+          cp dist/* stage/bin/
+          cp -r migrations/* stage/migrations/
+          cp -r deploy/* stage/deploy/
+          printf '<!doctype html><title>Kleos</title><h1>Kleos</h1>\n' > stage/web/index.html
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Rsync to VPS
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+          USER: ${{ secrets.VPS_USER }}
+        run: |
+          rsync -az --delete -e "ssh -p $PORT" stage/bin/        "$USER@$HOST:/opt/kleos/bin.new/"
+          rsync -az --delete -e "ssh -p $PORT" stage/web/        "$USER@$HOST:/opt/kleos/web/"
+          rsync -az --delete -e "ssh -p $PORT" stage/migrations/ "$USER@$HOST:/opt/kleos/migrations/"
+          rsync -az          -e "ssh -p $PORT" stage/deploy/     "$USER@$HOST:/opt/kleos/deploy/"
+
+      - name: Run deploy.sh on VPS
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+          USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -p "$PORT" "$USER@$HOST" "TAG=${TAG} bash /opt/kleos/deploy/deploy.sh"
+
