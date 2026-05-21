@@ -1,0 +1,61 @@
+{
+  "phases": [
+    {
+      "name": "Foundation",
+      "label": "Complete",
+      "state": "complete",
+      "summary": "Repo, Go service, migrations, CI, deploy workflow, nginx route, and public health endpoints are live."
+    },
+    {
+      "name": "Auth",
+      "label": "Complete",
+      "state": "complete",
+      "summary": "Signup, login, refresh, logout, and current-user endpoints passed live end-to-end verification."
+    },
+    {
+      "name": "SMTP",
+      "label": "Gmail pending",
+      "state": "pending",
+      "summary": "Encrypted storage, custom ForwardEmail verification, delete, list, verify, and primary selection are working."
+    },
+    {
+      "name": "Resume",
+      "label": "Complete",
+      "state": "complete",
+      "summary": "PDF upload, pdftotext parsing, storage, list, activate, and delete were verified on the deployed service."
+    },
+    {
+      "name": "Preferences",
+      "label": "Complete",
+      "state": "complete",
+      "summary": "Preferences GET and full-replace PUT round-trip arrays, remote flag, tone preset, and addendum."
+    }
+  ],
+  "checkpoints": [
+    {
+      "date": "2026-05-21 14:15 IST",
+      "title": "Custom SMTP verified",
+      "summary": "smtp.forwardemail.net:465 verified through the public API with encrypted storage and no password leakage in responses."
+    },
+    {
+      "date": "2026-05-21 14:09 IST",
+      "title": "SMTP primary route verified",
+      "summary": "Two dummy SMTP credentials were created live and exactly one primary credential was confirmed through API and Postgres."
+    },
+    {
+      "date": "2026-05-21 13:30 IST",
+      "title": "Preferences live verified",
+      "summary": "GET and PUT preferences round-tripped arrays, remote_only, tone_preset, and tone_addendum through API and database."
+    },
+    {
+      "date": "2026-05-21 13:23 IST",
+      "title": "Resume live verified",
+      "summary": "A generated PDF was uploaded, parsed, stored, activated, listed, deleted, and confirmed removed from container storage."
+    },
+    {
+      "date": "2026-05-21 13:02 IST",
+      "title": "Auth live verified",
+      "summary": "Signup, login, refresh rotation, current user, logout, and rejected post-logout refresh all passed against the VPS."
+    }
+  ]
+}

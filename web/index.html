@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kleos Status</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Kleos</p>
+          <h1>Progress + Health</h1>
+        </div>
+        <div class="endpoint">
+          <span>Public API</span>
+          <code>/kleos/api</code>
+        </div>
+      </header>
+
+      <section class="hero" aria-labelledby="summary-title">
+        <div>
+          <p class="eyebrow">Current Build State</p>
+          <h2 id="summary-title">Foundation and onboarding APIs are live.</h2>
+          <p class="summary">
+            Auth, SMTP storage, resume parsing, preferences, deployments, and public health checks have been verified on the VPS.
+            Gmail SMTP verification is the remaining Phase 1 acceptance blocker.
+          </p>
+        </div>
+        <div class="blocker">
+          <span class="status-dot warn"></span>
+          <div>
+            <strong>Active blocker</strong>
+            <p>Need Gmail SMTP app-password credentials to finish Phase 1.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid phase-grid" aria-labelledby="phase-title">
+        <div class="section-heading">
+          <p class="eyebrow">Phase Status</p>
+          <h2 id="phase-title">Verified Work</h2>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel" aria-labelledby="health-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Live API</p>
+              <h2 id="health-title">Health Checks</h2>
+            </div>
+            <button id="refresh-health" type="button">Refresh</button>
+          </div>
+          <div id="health-list" class="health-list" aria-live="polite"></div>
+        </div>
+
+        <div class="panel" aria-labelledby="blocker-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Next Input</p>
+              <h2 id="blocker-title">Gmail SMTP</h2>
+            </div>
+          </div>
+          <ul class="credential-list">
+            <li><span>host</span><code>smtp.gmail.com</code></li>
+            <li><span>port</span><code>465 or 587</code></li>
+            <li><span>username</span><code>Gmail address</code></li>
+            <li><span>password</span><code>App password</code></li>
+            <li><span>from_email</span><code>Verified sender</code></li>
+            <li><span>use_tls</span><code>true</code></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="timeline-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Evidence</p>
+            <h2 id="timeline-title">Recent Checkpoints</h2>
+          </div>
+        </div>
+        <div id="checkpoint-list" class="timeline"></div>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

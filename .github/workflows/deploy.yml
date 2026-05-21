@@ -36,7 +36,7 @@ jobs:
           cp dist/* stage/bin/
           cp -r migrations/* stage/migrations/
           cp -r deploy/* stage/deploy/
-          printf '<!doctype html><title>Kleos</title><h1>Kleos</h1>\n' > stage/web/index.html
+          cp -r web/* stage/web/
 
       - name: Setup SSH
         env:
@@ -67,4 +67,3 @@ jobs:
           USER: ${{ secrets.VPS_USER }}
         run: |
           ssh -p "$PORT" "$USER@$HOST" "TAG=${TAG} bash /opt/kleos/deploy/deploy.sh"
-
