@@ -1351,8 +1351,8 @@ Agent must verify each box before moving to next phase.
 - [x] Migration 001 applies cleanly via `cmd/migrate`
 - [x] `GET /api/healthz` returns 200
 - [x] `GET /api/readyz` checks DB + Redis, returns 200/503
-- [ ] CI workflow runs vet + lint + test on PR
-- [ ] First successful deploy from `main` lands at `https://abhiyadav.in/kleos/api/healthz`
+- [x] CI workflow runs vet + lint + test on PR
+- [x] First successful deploy from `main` lands at `https://abhiyadav.in/kleos/api/healthz`
 
 ### Phase 1 — Auth + SMTP + Resume + Preferences
 - [ ] Signup, login, refresh, logout work end-to-end
