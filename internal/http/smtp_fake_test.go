@@ -48,6 +48,22 @@ func (s *fakeSMTPService) Verify(ctx context.Context, userID, id string) (smtpcr
 	return smtpcred.VerifyResult{OK: true, Detail: "ok"}, nil
 }
 
+func (s *fakeSMTPService) SetPrimary(ctx context.Context, userID, id string) (smtpcred.Credential, error) {
+	record, exists := s.records[id]
+	if !exists || record.UserID != userID {
+		return smtpcred.Credential{}, errors.New("not found")
+	}
+	for key, value := range s.records {
+		if value.UserID == userID {
+			value.IsPrimary = false
+			s.records[key] = value
+		}
+	}
+	record.IsPrimary = true
+	s.records[id] = record
+	return record, nil
+}
+
 func (s *fakeSMTPService) Delete(ctx context.Context, userID, id string) error {
 	if _, exists := s.records[id]; !exists {
 		return errors.New("not found")

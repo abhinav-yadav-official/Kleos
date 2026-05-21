@@ -12,6 +12,7 @@ type SMTPService interface {
 	Create(ctx context.Context, userID string, input smtpcred.CreateInput) (smtpcred.Credential, error)
 	List(ctx context.Context, userID string) ([]smtpcred.Credential, error)
 	Verify(ctx context.Context, userID, id string) (smtpcred.VerifyResult, error)
+	SetPrimary(ctx context.Context, userID, id string) (smtpcred.Credential, error)
 	Delete(ctx context.Context, userID, id string) error
 }
 
@@ -57,6 +58,19 @@ func registerSMTPRoutes(r chi.Router, authService AuthService, smtpService SMTPS
 			return
 		}
 		writeJSON(w, http.StatusOK, result)
+	})
+
+	r.Post("/api/smtp/{id}/primary", func(w http.ResponseWriter, r *http.Request) {
+		user, ok := authenticatedUser(w, r, authService)
+		if !ok {
+			return
+		}
+		record, err := smtpService.SetPrimary(r.Context(), user.ID, chi.URLParam(r, "id"))
+		if err != nil {
+			writeError(w, http.StatusNotFound, "smtp_not_found", "SMTP credential not found")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]smtpcred.Credential{"smtp": record})
 	})
 
 	r.Delete("/api/smtp/{id}", func(w http.ResponseWriter, r *http.Request) {

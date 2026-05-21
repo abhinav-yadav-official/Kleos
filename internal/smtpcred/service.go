@@ -110,6 +110,39 @@ func (s *Service) Verify(ctx context.Context, userID, id string) (VerifyResult, 
 	return VerifyResult{OK: true, Detail: "ok"}, nil
 }
 
+func (s *Service) SetPrimary(ctx context.Context, userID, id string) (Credential, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Credential{}, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx, `UPDATE smtp_credentials SET is_primary = false WHERE user_id = $1`, userID); err != nil {
+		return Credential{}, err
+	}
+
+	record := Credential{}
+	err = tx.QueryRow(ctx, `
+		UPDATE smtp_credentials
+		SET is_primary = true
+		WHERE id = $1 AND user_id = $2
+		RETURNING id::text, user_id::text, label, host, port, username,
+			from_email::text, COALESCE(from_name, ''), use_tls, verified_at,
+			COALESCE(last_error, ''), is_primary, created_at
+	`, id, userID).Scan(
+		&record.ID, &record.UserID, &record.Label, &record.Host, &record.Port, &record.Username,
+		&record.FromEmail, &record.FromName, &record.UseTLS, &record.VerifiedAt,
+		&record.LastError, &record.IsPrimary, &record.CreatedAt,
+	)
+	if err != nil {
+		return Credential{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Credential{}, err
+	}
+	return record, nil
+}
+
 func (s *Service) Delete(ctx context.Context, userID, id string) error {
 	tag, err := s.pool.Exec(ctx, `DELETE FROM smtp_credentials WHERE id = $1 AND user_id = $2`, id, userID)
 	if err != nil {

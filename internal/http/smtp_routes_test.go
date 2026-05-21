@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestSMTPRoutesCreateListVerifyAndDelete(t *testing.T) {
+func TestSMTPRoutesCreateListVerifyPrimaryAndDelete(t *testing.T) {
 	auth := newFakeAuthService()
 	authResult, err := auth.Signup(context.Background(), "smtp@example.com", "password123", "SMTP User")
 	if err != nil {
@@ -47,6 +47,14 @@ func TestSMTPRoutesCreateListVerifyAndDelete(t *testing.T) {
 	verify := postJSONWithToken(t, router, "/api/smtp/smtp-1/verify", authResult.Access, map[string]any{})
 	if verify.Code != http.StatusOK {
 		t.Fatalf("verify status = %d, body = %s", verify.Code, verify.Body.String())
+	}
+
+	primary := postJSONWithToken(t, router, "/api/smtp/smtp-1/primary", authResult.Access, map[string]any{})
+	if primary.Code != http.StatusOK {
+		t.Fatalf("primary status = %d, body = %s", primary.Code, primary.Body.String())
+	}
+	if !contains(primary.Body.String(), `"is_primary":true`) {
+		t.Fatalf("primary response should mark credential primary: %s", primary.Body.String())
 	}
 
 	deleteReq := httptest.NewRequest(http.MethodDelete, "/api/smtp/smtp-1", nil)
