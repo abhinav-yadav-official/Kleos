@@ -69,3 +69,15 @@ Files changed: cmd/api/main.go, internal/config/*, internal/crypto/*, internal/h
 Commands run: go test ./internal/crypto; go test ./internal/http; go mod tidy -go=1.23.0; make test; make build; make lint.
 Verification: encryption and SMTP route tests failed first for missing APIs, then passed. Full test/build/lint passed. SMTP verifier supports implicit TLS on 465 and STARTTLS when use_tls is true on other ports.
 Open context: deploy and verify live POST /api/smtp storage. Full external SMTP verification still needs real SMTP credentials.
+
+2026-05-21 13:10:53 IST | Phase 1 SMTP live storage verified | Confirmed deployed SMTP credential create/list/delete path stores encrypted data and never returns plaintext password.
+Files changed: checkpoints.txt.
+Commands run: curl signup/login/POST /api/smtp/GET /api/smtp/DELETE /api/smtp against https://abhiyadav.in/kleos/api; ssh vps docker exec kleos-postgres-1 psql query for smtp_credentials password_cipher/nonce lengths; git status --short; git log -1 --oneline.
+Verification: live check returned smtp-storage-ok for throwaway user smtp-1779349188@example.com with credential 08c463c3-bd09-4e01-9298-68fce8add2fd. API responses did not include dummy-smtp-secret; database ciphertext did not include plaintext and had non-empty cipher/nonce values.
+Open context: SMTP Phase 1 checkbox remains unchecked until a real Gmail app password and custom SMTP server credential can verify POST /api/smtp/{id}/verify end-to-end. Next unchecked Phase 1 slice is resume upload/parse/storage.
+
+2026-05-21 13:18:27 IST | Phase 1 resume slice implemented locally | Added authenticated resume upload/list/activate/delete routes, PDF validation, UUID-based file storage, pdftotext extraction, and Postgres persistence.
+Files changed: cmd/api/main.go, internal/config/*, internal/http/*, internal/resume/*, deploy/Dockerfile.runtime, deploy/docker-compose.yml, deploy/deploy.sh, .env.example, .gitignore, checkpoints.txt.
+Commands run: go test ./internal/http (red then green); go test ./internal/resume (red then green); make test; make build; make lint; bash -n deploy/deploy.sh; git diff --check.
+Verification: local tests pass, build passes, vet passes, deploy script syntax passes. Runtime image now installs poppler-utils and deploy creates/chowns /opt/kleos/data/resumes for container UID 10001.
+Open context: push resume slice, wait for CI/deploy, then verify live POST /api/resumes with a generated PDF before checking the Phase 1 resume acceptance box.

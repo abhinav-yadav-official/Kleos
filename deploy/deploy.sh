@@ -6,6 +6,12 @@ TAG=${TAG:?TAG is required}
 
 cd "$APP_DIR"
 
+mkdir -p "$APP_DIR/data/resumes" "$APP_DIR/logs"
+docker run --rm \
+  -v "$APP_DIR/data:/data" \
+  -v "$APP_DIR/logs:/logs" \
+  alpine:3.20 sh -c 'chown -R 10001:10001 /data /logs'
+
 docker build \
   -t "kleos/api:${TAG}" \
   -f "$APP_DIR/deploy/Dockerfile.runtime" \

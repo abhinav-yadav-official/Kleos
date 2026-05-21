@@ -13,6 +13,7 @@ func TestLoadReadsConfiguredValues(t *testing.T) {
 	t.Setenv("JWT_SECRET", "jwt-secret")
 	t.Setenv("JWT_ACCESS_TTL", "10m")
 	t.Setenv("JWT_REFRESH_TTL", "24h")
+	t.Setenv("RESUME_STORAGE_DIR", "/tmp/kleos-resumes")
 
 	cfg := Load()
 
@@ -46,6 +47,9 @@ func TestLoadReadsConfiguredValues(t *testing.T) {
 	if cfg.JWTRefreshTTL != "24h" {
 		t.Fatalf("JWTRefreshTTL = %q, want 24h", cfg.JWTRefreshTTL)
 	}
+	if cfg.ResumeStorage != "/tmp/kleos-resumes" {
+		t.Fatalf("ResumeStorage = %q, want /tmp/kleos-resumes", cfg.ResumeStorage)
+	}
 }
 
 func TestLoadDefaultsForLocalDevelopment(t *testing.T) {
@@ -62,5 +66,8 @@ func TestLoadDefaultsForLocalDevelopment(t *testing.T) {
 	}
 	if cfg.LogDir != "./logs" {
 		t.Fatalf("LogDir = %q, want ./logs", cfg.LogDir)
+	}
+	if cfg.ResumeStorage != "./data/resumes" {
+		t.Fatalf("ResumeStorage = %q, want ./data/resumes", cfg.ResumeStorage)
 	}
 }

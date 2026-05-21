@@ -32,10 +32,13 @@ services:
     image: kleos/api:${TAG:-latest}
     restart: unless-stopped
     env_file: ../.env
+    environment:
+      RESUME_STORAGE_DIR: /data/resumes
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
     volumes:
+      - ../data/resumes:/data/resumes
       - ../logs:/var/log/kleos
     ports:
       - "127.0.0.1:8080:8080"
@@ -43,4 +46,3 @@ services:
 volumes:
   pgdata:
   redisdata:
-

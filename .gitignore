@@ -5,6 +5,8 @@
 bin/
 dist/
 tmp/
+data/
+logs/
 coverage.out
 
 web/node_modules/

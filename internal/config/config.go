@@ -15,6 +15,7 @@ type Config struct {
 	JWTAccessTTL  string
 	JWTRefreshTTL string
 	SMTPKey       string
+	ResumeStorage string
 }
 
 func Load() Config {
@@ -31,6 +32,7 @@ func Load() Config {
 		JWTAccessTTL:  getenv("JWT_ACCESS_TTL", "15m"),
 		JWTRefreshTTL: getenv("JWT_REFRESH_TTL", "720h"),
 		SMTPKey:       getenv("SMTP_CRED_ENCRYPTION_KEY", "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"),
+		ResumeStorage: getenv("RESUME_STORAGE_DIR", "./data/resumes"),
 	}
 }
 
