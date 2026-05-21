@@ -1358,7 +1358,7 @@ Agent must verify each box before moving to next phase.
 - [x] Signup, login, refresh, logout work end-to-end
 - [ ] `POST /api/smtp` stores AES-GCM ciphertext; verify endpoint succeeds against Gmail app password and a custom server
 - [x] Resume upload validates PDF, runs pdftotext, stores file + parsed text
-- [ ] Preferences CRUD round-trips arrays and tone preset
+- [x] Preferences CRUD round-trips arrays and tone preset
 
 ### Phase 2 — Job scraping
 - [ ] Migrations 002 applied
