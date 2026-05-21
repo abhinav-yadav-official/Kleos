@@ -1355,7 +1355,7 @@ Agent must verify each box before moving to next phase.
 - [x] First successful deploy from `main` lands at `https://abhiyadav.in/kleos/api/healthz`
 
 ### Phase 1 — Auth + SMTP + Resume + Preferences
-- [ ] Signup, login, refresh, logout work end-to-end
+- [x] Signup, login, refresh, logout work end-to-end
 - [ ] `POST /api/smtp` stores AES-GCM ciphertext; verify endpoint succeeds against Gmail app password and a custom server
 - [ ] Resume upload validates PDF, runs pdftotext, stores file + parsed text
 - [ ] Preferences CRUD round-trips arrays and tone preset

@@ -14,6 +14,7 @@ type Config struct {
 	JWTSecret     string
 	JWTAccessTTL  string
 	JWTRefreshTTL string
+	SMTPKey       string
 }
 
 func Load() Config {
@@ -29,6 +30,7 @@ func Load() Config {
 		JWTSecret:     getenv("JWT_SECRET", "dev-secret-change-me"),
 		JWTAccessTTL:  getenv("JWT_ACCESS_TTL", "15m"),
 		JWTRefreshTTL: getenv("JWT_REFRESH_TTL", "720h"),
+		SMTPKey:       getenv("SMTP_CRED_ENCRYPTION_KEY", "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"),
 	}
 }
 

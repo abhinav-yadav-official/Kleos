@@ -57,3 +57,15 @@ Files changed: cmd/api/main.go, internal/auth/*, internal/config/config.go, inte
 Commands run: go test ./internal/auth ./internal/http; go mod tidy -go=1.23.0; make test; make build; make lint; nc -z 127.0.0.1 5433; nc -z 127.0.0.1 6380.
 Verification: auth tests failed first for missing APIs, then passed after implementation; make test/build/lint passed. Local DB-backed HTTP auth flow not run because local Docker/OrbStack API is unavailable and dev ports 5433/6380 are closed.
 Open context: push auth slice and verify signup/login/refresh/me/logout against VPS after deployment.
+
+2026-05-21 13:02:54 IST | Phase 1 auth verified | Auth endpoints are deployed and pass the live end-to-end flow.
+Files changed: plan.md, checkpoints.txt.
+Commands run: gh run watch 26211813279 --exit-status; gh run watch 26211813335 --exit-status; curl POST /auth/signup; curl POST /auth/login; curl POST /auth/refresh; curl GET /auth/me; curl POST /auth/logout; curl POST /auth/refresh after logout.
+Verification: CI and deploy passed for commit 047ab0c. Live auth flow passed for throwaway user phase1-1779348451@example.com; refresh token rotated; refresh after logout returned HTTP 401. The auth Phase 1 checkbox is checked in plan.md.
+Open context: next Phase 1 slice is SMTP encrypted credential storage and verify endpoint. Real Gmail/custom SMTP credentials are needed later to satisfy the plan's external SMTP verification criterion.
+
+2026-05-21 13:07:22 IST | Phase 1 SMTP slice | Added AES-GCM codec, SMTP credential service, authenticated SMTP routes, and TLS/STARTTLS verification logic.
+Files changed: cmd/api/main.go, internal/config/*, internal/crypto/*, internal/http/*, internal/smtpcred/*, go.mod, go.sum, checkpoints.txt.
+Commands run: go test ./internal/crypto; go test ./internal/http; go mod tidy -go=1.23.0; make test; make build; make lint.
+Verification: encryption and SMTP route tests failed first for missing APIs, then passed. Full test/build/lint passed. SMTP verifier supports implicit TLS on 465 and STARTTLS when use_tls is true on other ports.
+Open context: deploy and verify live POST /api/smtp storage. Full external SMTP verification still needs real SMTP credentials.

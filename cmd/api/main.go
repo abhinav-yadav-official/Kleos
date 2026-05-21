@@ -12,8 +12,10 @@ import (
 
 	"github.com/abhinav-yadav-official/Kleos/internal/auth"
 	"github.com/abhinav-yadav-official/Kleos/internal/config"
+	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
 	"github.com/abhinav-yadav-official/Kleos/internal/db"
 	apphttp "github.com/abhinav-yadav-official/Kleos/internal/http"
+	"github.com/abhinav-yadav-official/Kleos/internal/smtpcred"
 )
 
 func main() {
@@ -44,10 +46,16 @@ func main() {
 		os.Exit(1)
 	}
 	authService := auth.NewService(postgres.Pool(), cfg.JWTSecret, accessTTL, refreshTTL)
+	smtpCodec, err := appcrypto.NewAESGCM(cfg.SMTPKey)
+	if err != nil {
+		slog.Error("create SMTP credential codec", "error", err)
+		os.Exit(1)
+	}
+	smtpService := smtpcred.NewService(postgres.Pool(), smtpCodec)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService}),
+		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
