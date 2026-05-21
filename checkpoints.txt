@@ -105,3 +105,9 @@ Files changed: internal/http/smtp.go, internal/http/smtp_fake_test.go, internal/
 Commands run: go test ./internal/http (red 404 then green); go test ./internal/http ./internal/smtpcred; make test; make build; make lint; git diff --check.
 Verification: full local tests pass, build passes, vet passes. Route returns the selected SMTP credential with is_primary=true and service clears other primary credentials for the same user in the same transaction.
 Open context: commit/push/deploy, then live-verify primary switching with dummy SMTP records. Full SMTP external verification still needs real Gmail/custom SMTP credentials.
+
+2026-05-21 14:09:05 IST | SMTP primary route live verified | Deployed POST /api/smtp/{id}/primary and verified primary switching with dummy SMTP records.
+Files changed: checkpoints.txt.
+Commands run: gh run watch 26215103234 --exit-status; gh run watch 26215103231 --exit-status; curl signup; curl POST /api/smtp twice; curl POST /api/smtp/{id}/primary; curl GET /api/smtp; ssh deploy@abhiyadav.in docker exec psql primary-state query; psql DELETE test user.
+Verification: CI run 26215103234 passed vet, golangci-lint, race tests, and build. Deploy run 26215103231 passed. Live check returned smtp-primary-live-ok for throwaway user smtp-primary-1779352736@example.com with primary 344eedc6-24c3-47ee-9adf-3db869e4c27d; API list and database both showed exactly one primary credential.
+Open context: no unblocked Phase 1 API work remains. The only remaining Phase 1 acceptance gap is external SMTP verification against real Gmail app-password and custom SMTP credentials.
