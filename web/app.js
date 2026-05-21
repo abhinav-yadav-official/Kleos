@@ -31,7 +31,7 @@ function renderPhases(phases) {
 }
 
 function renderTimeline(items) {
-  const list = document.querySelector("#checkpoint-list");
+  const list = document.querySelector("#verification-list");
   list.replaceChildren(
     ...items.map((item) => {
       const row = document.createElement("article");
@@ -90,9 +90,9 @@ async function init() {
   try {
     const status = await loadStatus();
     renderPhases(status.phases);
-    renderTimeline(status.checkpoints);
+    renderTimeline(status.verification);
   } catch (error) {
-    const timeline = document.querySelector("#checkpoint-list");
+    const timeline = document.querySelector("#verification-list");
     timeline.textContent = error instanceof Error ? error.message : "Could not load status";
   }
 
