@@ -1,0 +1,29 @@
+2026-05-21 11:45 IST | plan/bootstrap | Context checkpoint file created from user instruction.
+Files changed: plan.md, checkpoints.txt.
+Context: project is Kleos; git repo name should be Kleos; public endpoints are https://abhiyadav.in/kleos/ and https://abhiyadav.in/kleos/api/.
+VPS: local ssh alias vps = abhinav@abhiyadav.in:2022. User said Codex login is already set up on VPS. Verified earlier: /opt/kleos and deploy user did not exist, nginx uses /etc/nginx/snippets/site-locations.conf, host ports 5432/6379/8082/8085/8086/3000/7001 are occupied, 8080 is free.
+Verification: plan.md now mentions checkpoints.txt and instructs agents to append after each completed step and read it after context switches.
+
+2026-05-21 11:45:27 IST | Phase 0 foundation | Initialized local git repo on main and created baseline project files/directories.
+Files changed: .gitignore, README.md, go.mod, .env.example, .golangci.yml; directories created under cmd/, internal/, migrations/, deploy/, .github/workflows/, scripts/, logs/.
+Commands run: git init -b main; go/docker version checks; mkdir for planned structure.
+Verification: git initialized successfully; local tooling available: go1.26.0 darwin/arm64, Docker 29.4.0, Compose v5.1.2.
+Open context: module path is github.com/abhinav-yadav-official/Kleos; plan says Go 1.23 but local Go is newer.
+
+2026-05-21 11:46:30 IST | Phase 0 TDD slice | Added config loader and health/ready router behavior.
+Files changed: internal/config/config_test.go, internal/config/config.go, internal/http/router_test.go, internal/http/router.go, go.sum.
+Commands run: go test ./internal/config ./internal/http; go mod tidy; go test ./internal/config ./internal/http.
+Verification: first test run failed as expected for undefined Load/NewRouter/Dependencies; final run passed for internal/config and internal/http.
+Open context: /api/readyz uses injectable Pinger dependencies; real DB/Redis pingers still need to be wired in cmd/api.
+
+2026-05-21 11:52:26 IST | Phase 0 local acceptance | Wired real Postgres/Redis pingers, API binary, migration command, migration 001, dev compose, Makefile, and CI skeleton.
+Files changed: cmd/api/main.go, cmd/migrate/main.go, internal/db/postgres.go, internal/db/redis.go, migrations/001_init.sql, deploy/docker-compose.dev.yml, Makefile, .github/workflows/ci.yml, go.mod, go.sum, plan.md.
+Commands run: go mod tidy -go=1.23.0; make test; make build; make lint; make up; docker compose -f deploy/docker-compose.dev.yml ps; make migrate; go run ./cmd/api; curl -i http://127.0.0.1:8080/api/healthz; curl -i http://127.0.0.1:8080/api/readyz.
+Verification: make test/build/lint passed; dev Postgres/Redis became healthy; migration 001 applied; /api/healthz returned HTTP 200 {"ok":true}; /api/readyz returned HTTP 200 {"ok":true}; API process was terminated cleanly.
+Open context: GitHub CLI is authenticated as abhinav-yadav-official, but abhinav-yadav-official/Kleos does not exist yet and no git remote is configured. Need user choice before creating remote repo and wiring deploy secrets. Docker/OrbStack became unavailable after verification, so rerun docker checks before further container work.
+
+2026-05-21 11:53:01 IST | Phase 0 local commit | Created local root commit for completed foundation work.
+Files changed: all current foundation files.
+Commands run: git diff --check; make test; make build; make lint; git add .; git commit -m "feat: bootstrap kleos foundation".
+Verification: git diff --check passed; make test/build/lint passed immediately before commit; root commit created and amended to include this checkpoint entry.
+Open context: local main has one commit and no remote configured.

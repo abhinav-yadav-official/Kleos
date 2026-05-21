@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+
+bin/
+dist/
+tmp/
+coverage.out
+
+web/node_modules/
+web/out/
+web/.next/
+
+.DS_Store
