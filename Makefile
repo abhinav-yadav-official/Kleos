@@ -15,6 +15,7 @@ build:
 	go build -o bin/worker-jobscraper ./cmd/worker-jobscraper
 	go build -o bin/worker-campaigntick ./cmd/worker-campaigntick
 	go build -o bin/worker-emailfinder ./cmd/worker-emailfinder
+	go build -o bin/worker-contentgen ./cmd/worker-contentgen
 
 up:
 	docker compose -f deploy/docker-compose.dev.yml up -d
