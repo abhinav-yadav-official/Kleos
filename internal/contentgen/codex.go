@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -18,11 +19,13 @@ type Generator interface {
 }
 
 // CLICodex invokes the Codex CLI as a subprocess. `Cmd` is the executable
-// (default "codex"); `Args` defaults to `["exec", "--json", "--no-stream"]`.
+// (default "codex"); the rest of the invocation matches `codex exec
+// --skip-git-repo-check --output-last-message <tmp> -` and reads the final
+// assistant message back from the temp file.
 type CLICodex struct {
-	Cmd     string
-	Args    []string
-	Timeout time.Duration
+	Cmd       string
+	ExtraArgs []string
+	Timeout   time.Duration
 }
 
 func NewCLICodex(cmd string, timeout time.Duration) *CLICodex {
@@ -34,7 +37,6 @@ func NewCLICodex(cmd string, timeout time.Duration) *CLICodex {
 	}
 	return &CLICodex{
 		Cmd:     cmd,
-		Args:    []string{"exec", "--json", "--no-stream"},
 		Timeout: timeout,
 	}
 }
@@ -45,20 +47,44 @@ func (c *CLICodex) Generate(ctx context.Context, prompt string) (Result, error) 
 	runCtx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(runCtx, c.Cmd, c.Args...)
-	cmd.Stdin = strings.NewReader(prompt)
-	var out, errBuf bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errBuf
+	tmp, err := os.CreateTemp("", "codex-out-*.txt")
+	if err != nil {
+		return Result{}, fmt.Errorf("codex temp file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	_ = tmp.Close()
+	defer os.Remove(tmpPath)
 
+	args := []string{"exec",
+		"--skip-git-repo-check",
+		"--dangerously-bypass-approvals-and-sandbox",
+		"--output-last-message", tmpPath,
+	}
+	args = append(args, c.ExtraArgs...)
+	args = append(args, "-")
+
+	cmd := exec.CommandContext(runCtx, c.Cmd, args...)
+	cmd.Stdin = strings.NewReader(prompt)
+	var stdoutBuf, errBuf bytes.Buffer
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &errBuf
 	if err := cmd.Run(); err != nil {
 		return Result{}, fmt.Errorf("codex run: %w (stderr: %s)", err, truncate(errBuf.String(), 200))
 	}
-	raw := bytes.TrimSpace(out.Bytes())
-	if len(raw) == 0 {
+
+	body, err := os.ReadFile(tmpPath)
+	if err != nil {
+		return Result{}, fmt.Errorf("read codex output: %w", err)
+	}
+	body = bytes.TrimSpace(body)
+	if len(body) == 0 {
+		// Fall back to scanning stdout for {"variants":...}.
+		body = bytes.TrimSpace(stdoutBuf.Bytes())
+	}
+	if len(body) == 0 {
 		return Result{}, ErrEmptyOutput
 	}
-	return ParseGeneratorOutput(raw)
+	return ParseGeneratorOutput(body)
 }
 
 // ParseGeneratorOutput extracts the {"variants": [...]} payload from raw
