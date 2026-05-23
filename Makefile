@@ -16,6 +16,8 @@ build:
 	go build -o bin/worker-campaigntick ./cmd/worker-campaigntick
 	go build -o bin/worker-emailfinder ./cmd/worker-emailfinder
 	go build -o bin/worker-contentgen ./cmd/worker-contentgen
+	go build -o bin/worker-sender ./cmd/worker-sender
+	go build -o bin/worker-warmuprollover ./cmd/worker-warmuprollover
 
 up:
 	docker compose -f deploy/docker-compose.dev.yml up -d

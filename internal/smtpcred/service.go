@@ -12,8 +12,11 @@ import (
 
 	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+const defaultWarmupDay1Limit = 5
 
 type Service struct {
 	pool   *pgxpool.Pool
@@ -107,6 +110,9 @@ func (s *Service) Verify(ctx context.Context, userID, id string) (VerifyResult, 
 	if err != nil {
 		return VerifyResult{}, err
 	}
+	if err := ensureWarmupState(ctx, s.pool, userID, id, defaultWarmupDay1Limit); err != nil {
+		return VerifyResult{}, err
+	}
 	return VerifyResult{OK: true, Detail: "ok"}, nil
 }
 
@@ -172,6 +178,19 @@ func (s *Service) verifyInput(ctx context.Context, userID, id string) (verifyInp
 	}
 	input.Password = password
 	return input, nil
+}
+
+type warmupExec interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+func ensureWarmupState(ctx context.Context, exec warmupExec, userID, smtpID string, day1Limit int) error {
+	_, err := exec.Exec(ctx, `
+		INSERT INTO warmup_state (user_id, smtp_id, start_date, current_day, todays_sent, todays_limit, last_rollover)
+		VALUES ($1::uuid, $2::uuid, CURRENT_DATE, 1, 0, $3, CURRENT_DATE)
+		ON CONFLICT (user_id) DO NOTHING
+	`, userID, smtpID, day1Limit)
+	return err
 }
 
 func verifySMTP(ctx context.Context, input verifyInput) error {
