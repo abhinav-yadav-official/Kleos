@@ -75,6 +75,14 @@ func main() {
 		sc = scraper.NewAshby(client, scraper.DefaultAshbyBase, slugList)
 	case "remoteok":
 		sc = scraper.NewRemoteOK(client, scraper.DefaultRemoteOKBase)
+	case "wellfound":
+		sc = scraper.NewWellfound(client)
+	case "indeed":
+		sc = scraper.NewIndeed(client)
+	case "naukri":
+		sc = scraper.NewNaukri(client)
+	case "linkedin":
+		sc = scraper.NewLinkedIn(client)
 	default:
 		fmt.Fprintf(os.Stderr, "unsupported source: %s\n", *source)
 		os.Exit(2)
