@@ -89,11 +89,20 @@ func (r *RemoteOK) Scrape(ctx context.Context, p ScrapeParams) ([]ScrapedJob, er
 		if !p.Since.IsZero() && posted != nil && posted.Before(p.Since) {
 			continue
 		}
-		companySlug := NormalizeSlug(j.Company)
+		companyName := strings.TrimSpace(j.Company)
+		companySlug := NormalizeSlug(companyName)
+		if companySlug == "" {
+			// Non-Latin company name (e.g. CJK); fall back to a stable
+			// per-job slug so the row still persists.
+			companySlug = "remoteok-" + id
+			if companyName == "" {
+				companyName = companySlug
+			}
+		}
 		out = append(out, ScrapedJob{
 			Source:      "remoteok",
 			ExternalID:  id,
-			CompanyName: j.Company,
+			CompanyName: companyName,
 			CompanySlug: companySlug,
 			Title:       j.Position,
 			Description: cleanHTML(j.Description),
