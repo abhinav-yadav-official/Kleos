@@ -156,7 +156,7 @@ func parseTime(s string) *time.Time {
 	if s == "" {
 		return nil
 	}
-	for _, layout := range []string{time.RFC3339, "2006-01-02T15:04:05Z07:00", "2006-01-02T15:04:05-07:00"} {
+	for _, layout := range []string{time.RFC3339Nano, time.RFC3339, "2006-01-02T15:04:05Z07:00", "2006-01-02T15:04:05-07:00", "2006-01-02T15:04:05.000-07:00"} {
 		if t, err := time.Parse(layout, s); err == nil {
 			return &t
 		}

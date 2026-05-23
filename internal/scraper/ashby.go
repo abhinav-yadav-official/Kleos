@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -38,14 +37,18 @@ type ashbyResp struct {
 type ashbyJob struct {
 	ID               string `json:"id"`
 	Title            string `json:"title"`
-	DepartmentName   string `json:"departmentName"`
-	LocationName     string `json:"locationName"`
+	Department       string `json:"department"`
+	Team             string `json:"team"`
 	EmploymentType   string `json:"employmentType"`
-	PublishedDate    string `json:"publishedDate"`
+	Location         string `json:"location"`
+	PublishedAt      string `json:"publishedAt"`
+	IsListed         bool   `json:"isListed"`
 	IsRemote         bool   `json:"isRemote"`
+	WorkplaceType    string `json:"workplaceType"`
+	JobURL           string `json:"jobUrl"`
+	ApplyURL         string `json:"applyUrl"`
 	DescriptionHTML  string `json:"descriptionHtml"`
 	DescriptionPlain string `json:"descriptionPlain"`
-	JobURL           string `json:"jobUrl"`
 }
 
 func (a *Ashby) Scrape(ctx context.Context, p ScrapeParams) ([]ScrapedJob, error) {
@@ -61,13 +64,11 @@ func (a *Ashby) Scrape(ctx context.Context, p ScrapeParams) ([]ScrapedJob, error
 }
 
 func (a *Ashby) scrapeBoard(ctx context.Context, slug string, p ScrapeParams) ([]ScrapedJob, error) {
-	url := fmt.Sprintf("%s/posting-api/job-board/%s", a.baseURL, slug)
-	body, _ := json.Marshal(map[string]bool{"includeCompensation": false})
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	url := fmt.Sprintf("%s/posting-api/job-board/%s?includeCompensation=false", a.baseURL, slug)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", "kleos-jobscraper/0.1")
 
@@ -95,7 +96,10 @@ func (a *Ashby) scrapeBoard(ctx context.Context, slug string, p ScrapeParams) ([
 
 	out := make([]ScrapedJob, 0, len(parsed.Jobs))
 	for i, j := range parsed.Jobs {
-		posted := parseTime(j.PublishedDate)
+		if !j.IsListed {
+			continue
+		}
+		posted := parseTime(j.PublishedAt)
 		if !p.Since.IsZero() && posted != nil && posted.Before(p.Since) {
 			continue
 		}
@@ -107,15 +111,16 @@ func (a *Ashby) scrapeBoard(ctx context.Context, slug string, p ScrapeParams) ([
 		if i < len(rawWrap.Jobs) {
 			raw = rawWrap.Jobs[i]
 		}
+		title := strings.TrimSpace(j.Title)
 		out = append(out, ScrapedJob{
 			Source:      "ashby",
 			ExternalID:  j.ID,
 			CompanyName: slug,
 			CompanySlug: slug,
-			Title:       j.Title,
+			Title:       title,
 			Description: strings.TrimSpace(desc),
-			Location:    j.LocationName,
-			Remote:      j.IsRemote || isRemote(j.LocationName),
+			Location:    j.Location,
+			Remote:      j.IsRemote || isRemote(j.Location) || strings.EqualFold(j.WorkplaceType, "Remote"),
 			URL:         j.JobURL,
 			PostedAt:    posted,
 			Raw:         raw,
