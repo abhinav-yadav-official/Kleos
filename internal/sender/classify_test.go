@@ -42,3 +42,10 @@ func TestClassifyPlainString(t *testing.T) {
 		t.Errorf("plain 550 = %s, want recipient_reject", got)
 	}
 }
+
+func TestClassifySenderPolicyReject(t *testing.T) {
+	err := errors.New("close DATA: 550 5.1.1 From header must be equal to sender@example.com")
+	if got := ClassifyError(err); got != ClassAuthFailure {
+		t.Errorf("sender policy 550 = %s, want auth_failure", got)
+	}
+}

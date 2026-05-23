@@ -9,7 +9,7 @@ import (
 
 var (
 	mailboxFullRE = regexp.MustCompile(`(?i)mailbox\s+full|quota`)
-	authBadRE     = regexp.MustCompile(`(?i)authentication|invalid\s+credentials|relay\s+access\s+denied|sender\s+address\s+rejected|sender\s+verify`)
+	authBadRE     = regexp.MustCompile(`(?i)authentication|invalid\s+credentials|relay\s+access\s+denied|sender\s+address\s+rejected|sender\s+verify|from\s+header|from\s+address|sender\s+policy`)
 	recipientRE   = regexp.MustCompile(`(?i)no\s+such\s+user|user\s+unknown|mailbox\s+unavailable|recipient\s+rejected|address\s+rejected|550 5\.1\.[0-9]|5\.1\.1|invalid recipient|relay denied`)
 )
 
