@@ -9,6 +9,7 @@ require (
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/redis/go-redis/v9 v9.17.0
 	golang.org/x/crypto v0.40.0
+	golang.org/x/time v0.10.0
 )
 
 require (

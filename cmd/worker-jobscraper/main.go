@@ -15,24 +15,20 @@ import (
 	"github.com/abhinav-yadav-official/Kleos/internal/scraper"
 )
 
-// One-shot job scraper CLI for v1.
+// One-shot job scraper CLI.
 //
 // Usage:
 //
 //	worker-jobscraper --source greenhouse --slugs gitlab,sourcegraph
+//	worker-jobscraper --source remoteok
 //
-// Subsequent slices add cron + asynq. For now this is invoked manually (or via
-// systemd timer / cron) to populate the jobs table.
+// Per-source rate limits are applied automatically (see scraper.SourceLimits).
 func main() {
-	source := flag.String("source", "greenhouse", "scraper source (greenhouse)")
-	slugs := flag.String("slugs", "", "comma-separated board slugs")
+	source := flag.String("source", "greenhouse", "scraper source: greenhouse|lever|ashby|remoteok")
+	slugs := flag.String("slugs", "", "comma-separated board slugs (required for greenhouse/lever/ashby)")
 	sinceStr := flag.String("since", "", "only keep jobs posted after this RFC3339 timestamp (optional)")
 	flag.Parse()
 
-	if *slugs == "" {
-		fmt.Fprintln(os.Stderr, "missing --slugs")
-		os.Exit(2)
-	}
 	slugList := splitCSV(*slugs)
 
 	var since time.Time
@@ -55,10 +51,30 @@ func main() {
 	}
 	defer pg.Close()
 
+	client := scraper.NewLimitedHTTPClient(*source)
+
 	var sc scraper.Scraper
 	switch *source {
 	case "greenhouse":
-		sc = scraper.NewGreenhouse(nil, scraper.DefaultGreenhouseBase, slugList)
+		if len(slugList) == 0 {
+			fmt.Fprintln(os.Stderr, "missing --slugs for greenhouse")
+			os.Exit(2)
+		}
+		sc = scraper.NewGreenhouse(client, scraper.DefaultGreenhouseBase, slugList)
+	case "lever":
+		if len(slugList) == 0 {
+			fmt.Fprintln(os.Stderr, "missing --slugs for lever")
+			os.Exit(2)
+		}
+		sc = scraper.NewLever(client, scraper.DefaultLeverBase, slugList)
+	case "ashby":
+		if len(slugList) == 0 {
+			fmt.Fprintln(os.Stderr, "missing --slugs for ashby")
+			os.Exit(2)
+		}
+		sc = scraper.NewAshby(client, scraper.DefaultAshbyBase, slugList)
+	case "remoteok":
+		sc = scraper.NewRemoteOK(client, scraper.DefaultRemoteOKBase)
 	default:
 		fmt.Fprintf(os.Stderr, "unsupported source: %s\n", *source)
 		os.Exit(2)
@@ -85,9 +101,6 @@ func main() {
 		"updated", updated,
 	)
 
-	if len(jobs) == 0 {
-		os.Exit(0)
-	}
 	if errors.Is(ctx.Err(), context.Canceled) {
 		os.Exit(1)
 	}
