@@ -12,9 +12,10 @@ import (
 )
 
 type User struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name,omitempty"`
+	ID      string `json:"id"`
+	Email   string `json:"email"`
+	Name    string `json:"name,omitempty"`
+	IsAdmin bool   `json:"is_admin,omitempty"`
 }
 
 type AccessClaims struct {

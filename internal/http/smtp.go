@@ -97,9 +97,10 @@ func authenticatedUser(w http.ResponseWriter, r *http.Request, authService AuthS
 		writeError(w, http.StatusUnauthorized, "unauthorized", "invalid bearer token")
 		return authUser{}, false
 	}
-	return authUser{ID: user.ID}, true
+	return authUser{ID: user.ID, IsAdmin: user.IsAdmin}, true
 }
 
 type authUser struct {
-	ID string
+	ID      string
+	IsAdmin bool
 }

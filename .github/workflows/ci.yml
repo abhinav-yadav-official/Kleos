@@ -20,4 +20,4 @@ jobs:
         with:
           version: v1.60
       - run: go test ./... -race -count=1
-      - run: go build ./cmd/api ./cmd/migrate ./cmd/worker-jobscraper ./cmd/worker-campaigntick
+      - run: go build ./cmd/api ./cmd/migrate ./cmd/worker-jobscraper ./cmd/worker-campaigntick ./cmd/worker-emailfinder

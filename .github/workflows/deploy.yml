@@ -25,7 +25,7 @@ jobs:
       - name: Build Go binaries
         run: |
           mkdir -p dist
-          for c in api migrate worker-jobscraper worker-campaigntick; do
+          for c in api migrate worker-jobscraper worker-campaigntick worker-emailfinder; do
             CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
               go build -ldflags="-s -w -X main.version=${TAG}" -o "dist/$c" "./cmd/$c"
           done

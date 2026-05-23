@@ -15,6 +15,7 @@ import (
 	"github.com/abhinav-yadav-official/Kleos/internal/config"
 	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
 	"github.com/abhinav-yadav-official/Kleos/internal/db"
+	"github.com/abhinav-yadav-official/Kleos/internal/emailfinder"
 	apphttp "github.com/abhinav-yadav-official/Kleos/internal/http"
 	"github.com/abhinav-yadav-official/Kleos/internal/preferences"
 	"github.com/abhinav-yadav-official/Kleos/internal/resume"
@@ -58,10 +59,11 @@ func main() {
 	resumeService := resume.NewService(postgres.Pool(), cfg.ResumeStorage)
 	preferencesService := preferences.NewService(postgres.Pool())
 	campaignService := campaigns.NewService(postgres.Pool())
+	adminService := emailfinder.NewService(postgres.Pool(), nil, nil)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService}),
+		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService, Admin: adminService}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

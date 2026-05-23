@@ -151,10 +151,10 @@ func (s *Service) UserFromAccessToken(ctx context.Context, access string) (User,
 	}
 	user := User{}
 	err = s.pool.QueryRow(ctx, `
-		SELECT id::text, email::text, COALESCE(name, '')
+		SELECT id::text, email::text, COALESCE(name, ''), is_admin
 		FROM users
 		WHERE id = $1 AND is_active = true
-	`, claims.UserID).Scan(&user.ID, &user.Email, &user.Name)
+	`, claims.UserID).Scan(&user.ID, &user.Email, &user.Name, &user.IsAdmin)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return User{}, ErrInvalidAccess

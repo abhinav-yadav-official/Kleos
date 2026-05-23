@@ -19,6 +19,7 @@ type Dependencies struct {
 	Resumes     ResumeService
 	Preferences PreferencesService
 	Campaigns   CampaignService
+	Admin       AdminService
 }
 
 func NewRouter(deps Dependencies) http.Handler {
@@ -58,6 +59,9 @@ func NewRouter(deps Dependencies) http.Handler {
 	}
 	if deps.Auth != nil && deps.Campaigns != nil {
 		registerCampaignRoutes(r, deps.Auth, deps.Campaigns)
+	}
+	if deps.Auth != nil && deps.Admin != nil {
+		registerAdminRoutes(r, deps.Auth, deps.Admin)
 	}
 
 	return r
