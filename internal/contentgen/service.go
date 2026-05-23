@@ -127,7 +127,7 @@ func (s *Service) GenerateOne(ctx context.Context, matchID string) (state string
 	if err != nil {
 		return "", "", err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	for i, v := range res.Variants {
 		var id string
