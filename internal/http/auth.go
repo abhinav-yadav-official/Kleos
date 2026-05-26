@@ -33,32 +33,42 @@ func newAuthResponse(result AuthResult) authResponse {
 	return authResponse{User: result.User, Access: result.Access, Refresh: result.Refresh}
 }
 
-func registerAuthRoutes(r chi.Router, service AuthService) {
-	r.Post("/api/auth/signup", func(w http.ResponseWriter, r *http.Request) {
+func registerAuthRoutes(r chi.Router, service AuthService, authRouteMW func(http.Handler) http.Handler, audit AuditWriter) {
+	signupHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req authCredentialsRequest
 		if !decodeJSON(w, r, &req) {
 			return
 		}
 		result, err := service.Signup(r.Context(), req.Email, req.Password, req.Name)
 		if err != nil {
+			audit.Write(r.Context(), "", "system", "signup_failed", req.Email, map[string]any{"reason": err.Error()})
 			writeError(w, http.StatusBadRequest, "signup_failed", err.Error())
 			return
 		}
+		audit.Write(r.Context(), result.User.ID, "user", "signup", result.User.Email, nil)
 		writeJSON(w, http.StatusCreated, newAuthResponse(result))
 	})
-
-	r.Post("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
+	loginHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req authCredentialsRequest
 		if !decodeJSON(w, r, &req) {
 			return
 		}
 		result, err := service.Login(r.Context(), req.Email, req.Password)
 		if err != nil {
+			audit.Write(r.Context(), "", "system", "login_failed", req.Email, nil)
 			writeError(w, http.StatusUnauthorized, "invalid_credentials", "invalid email or password")
 			return
 		}
+		audit.Write(r.Context(), result.User.ID, "user", "login", result.User.Email, nil)
 		writeJSON(w, http.StatusOK, newAuthResponse(result))
 	})
+	if authRouteMW != nil {
+		r.Method("POST", "/api/auth/signup", authRouteMW(signupHandler))
+		r.Method("POST", "/api/auth/login", authRouteMW(loginHandler))
+	} else {
+		r.Post("/api/auth/signup", signupHandler.ServeHTTP)
+		r.Post("/api/auth/login", loginHandler.ServeHTTP)
+	}
 
 	r.Post("/api/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
 		var req refreshRequest

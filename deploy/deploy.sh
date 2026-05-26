@@ -34,5 +34,13 @@ rm -rf "$APP_DIR/bin"
 mv "$APP_DIR/bin.new" "$APP_DIR/bin"
 mkdir -p "$APP_DIR/bin.new"
 
+# Make ops scripts executable.
+if [[ -d "$APP_DIR/scripts" ]]; then
+  chmod +x "$APP_DIR/scripts"/*.sh 2>/dev/null || true
+fi
+
+# Logrotate config + daily backup cron are installed once during VPS setup
+# (see plan §16). deploy.sh stays idempotent without root privileges.
+
 docker image prune -f
 echo "deploy ok: TAG=${TAG}"

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/abhinav-yadav-official/Kleos/internal/audit"
 	"github.com/abhinav-yadav-official/Kleos/internal/auth"
 	"github.com/abhinav-yadav-official/Kleos/internal/campaigns"
 	"github.com/abhinav-yadav-official/Kleos/internal/config"
@@ -61,10 +62,11 @@ func main() {
 	campaignService := campaigns.NewService(postgres.Pool())
 	adminService := emailfinder.NewService(postgres.Pool(), nil, nil)
 	warmupAdapter := newWarmupAdapter(postgres.Pool())
+	auditLogger := audit.NewLogger(postgres.Pool())
 
 	server := &http.Server{
 		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService, Admin: adminService, Warmup: warmupAdapter}),
+		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService, Admin: adminService, Warmup: warmupAdapter, Audit: auditLogger}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

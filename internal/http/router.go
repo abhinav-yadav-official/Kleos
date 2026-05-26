@@ -1,8 +1,10 @@
 package apphttp
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -21,10 +23,31 @@ type Dependencies struct {
 	Campaigns   CampaignService
 	Admin       AdminService
 	Warmup      WarmupService
+	Audit       AuditWriter
 }
+
+// AuditWriter is the narrow interface satisfied by *audit.Logger.
+type AuditWriter interface {
+	Write(ctx context.Context, userID, actor, action, target string, meta map[string]any)
+}
+
+// Rate limit defaults from §18 security checklist.
+const (
+	rateLimitUnauthPerMin     = 60
+	rateLimitAuthedPerMin     = 600
+	rateLimitAuthRoutesPerMin = 5
+)
 
 func NewRouter(deps Dependencies) http.Handler {
 	r := chi.NewRouter()
+
+	globalLimiter := newRateLimiter(rateLimiterConfig{Limit: rateLimitAuthedPerMin, Window: time.Minute, Capacity: 50_000, Now: time.Now})
+	authRouteLimiter := newRateLimiter(rateLimiterConfig{Limit: rateLimitAuthRoutesPerMin, Window: time.Minute, Capacity: 50_000, Now: time.Now})
+	_ = rateLimitUnauthPerMin // reserved for unauth-only paths if added later
+	r.Use(func(next http.Handler) http.Handler {
+		// Apply global per-user-or-IP limit (600/min when authenticated, else per-IP)
+		return rateLimitByUser(globalLimiter, deps.Auth)(next)
+	})
 
 	r.Get("/api/healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
@@ -46,11 +69,15 @@ func NewRouter(deps Dependencies) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	})
 
+	audit := deps.Audit
+	if audit == nil {
+		audit = noopAudit{}
+	}
 	if deps.Auth != nil {
-		registerAuthRoutes(r, deps.Auth)
+		registerAuthRoutes(r, deps.Auth, rateLimitByIP(authRouteLimiter), audit)
 	}
 	if deps.Auth != nil && deps.SMTP != nil {
-		registerSMTPRoutes(r, deps.Auth, deps.SMTP)
+		registerSMTPRoutes(r, deps.Auth, deps.SMTP, audit)
 	}
 	if deps.Auth != nil && deps.Resumes != nil {
 		registerResumeRoutes(r, deps.Auth, deps.Resumes)
@@ -62,7 +89,7 @@ func NewRouter(deps Dependencies) http.Handler {
 		registerCampaignRoutes(r, deps.Auth, deps.Campaigns)
 	}
 	if deps.Auth != nil && deps.Admin != nil {
-		registerAdminRoutes(r, deps.Auth, deps.Admin)
+		registerAdminRoutes(r, deps.Auth, deps.Admin, audit)
 	}
 	if deps.Auth != nil && deps.Warmup != nil {
 		registerWarmupRoutes(r, deps.Auth, deps.Warmup)
@@ -70,6 +97,10 @@ func NewRouter(deps Dependencies) http.Handler {
 
 	return r
 }
+
+type noopAudit struct{}
+
+func (noopAudit) Write(context.Context, string, string, string, string, map[string]any) {}
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json")

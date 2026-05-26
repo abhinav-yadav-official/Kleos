@@ -33,13 +33,12 @@ type adminDenylistRequest struct {
 	Reason string `json:"reason"`
 }
 
-func registerAdminRoutes(r chi.Router, authService AuthService, svc AdminService) {
+func registerAdminRoutes(r chi.Router, authService AuthService, svc AdminService, audit AuditWriter) {
 	r.Post("/api/admin/recruiters", func(w http.ResponseWriter, r *http.Request) {
 		user, ok := requireAdmin(w, r, authService)
 		if !ok {
 			return
 		}
-		_ = user
 		var req adminRecruitersRequest
 		if !decodeJSON(w, r, &req) {
 			return
@@ -68,6 +67,9 @@ func registerAdminRoutes(r chi.Router, authService AuthService, svc AdminService
 			writeError(w, http.StatusInternalServerError, "admin_persist_failed", err.Error())
 			return
 		}
+		audit.Write(r.Context(), user.ID, "admin", "admin_recruiters_added", req.CompanySlug, map[string]any{
+			"inserted": n, "submitted": len(req.Emails),
+		})
 		writeJSON(w, http.StatusOK, map[string]any{
 			"company_id": companyID,
 			"inserted":   n,
@@ -76,7 +78,7 @@ func registerAdminRoutes(r chi.Router, authService AuthService, svc AdminService
 	})
 
 	r.Post("/api/admin/denylist", func(w http.ResponseWriter, r *http.Request) {
-		_, ok := requireAdmin(w, r, authService)
+		user, ok := requireAdmin(w, r, authService)
 		if !ok {
 			return
 		}
@@ -88,6 +90,7 @@ func registerAdminRoutes(r chi.Router, authService AuthService, svc AdminService
 			writeError(w, http.StatusBadRequest, "denylist_invalid", err.Error())
 			return
 		}
+		audit.Write(r.Context(), user.ID, "admin", "admin_denylist_added", req.Email, map[string]any{"reason": req.Reason})
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	})
 }

@@ -16,7 +16,7 @@ type SMTPService interface {
 	Delete(ctx context.Context, userID, id string) error
 }
 
-func registerSMTPRoutes(r chi.Router, authService AuthService, smtpService SMTPService) {
+func registerSMTPRoutes(r chi.Router, authService AuthService, smtpService SMTPService, audit AuditWriter) {
 	r.Get("/api/smtp", func(w http.ResponseWriter, r *http.Request) {
 		user, ok := authenticatedUser(w, r, authService)
 		if !ok {
@@ -44,6 +44,7 @@ func registerSMTPRoutes(r chi.Router, authService AuthService, smtpService SMTPS
 			writeError(w, http.StatusBadRequest, "smtp_create_failed", err.Error())
 			return
 		}
+		audit.Write(r.Context(), user.ID, "user", "smtp_added", record.ID, map[string]any{"host": record.Host, "label": record.Label})
 		writeJSON(w, http.StatusCreated, map[string]smtpcred.Credential{"smtp": record})
 	})
 
@@ -78,10 +79,12 @@ func registerSMTPRoutes(r chi.Router, authService AuthService, smtpService SMTPS
 		if !ok {
 			return
 		}
-		if err := smtpService.Delete(r.Context(), user.ID, chi.URLParam(r, "id")); err != nil {
+		id := chi.URLParam(r, "id")
+		if err := smtpService.Delete(r.Context(), user.ID, id); err != nil {
 			writeError(w, http.StatusNotFound, "smtp_not_found", "SMTP credential not found")
 			return
 		}
+		audit.Write(r.Context(), user.ID, "user", "smtp_deleted", id, nil)
 		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 	})
 }

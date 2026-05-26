@@ -223,6 +223,10 @@ func (s *Service) recordFailure(ctx context.Context, sc sendContext, msgID strin
 		INSERT INTO sent_emails (user_id, match_id, draft_id, recruiter_email, smtp_id, message_id, status, smtp_response)
 		VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5::uuid, $6, $7, $8)
 	`, sc.UserID, sc.MatchID, sc.DraftID, sc.RecruiterEmail, sc.SMTPID, msgID, status, truncate(err.Error(), 500))
+	_, _ = s.pool.Exec(ctx, `
+		INSERT INTO audit_log (user_id, actor, action, target, meta)
+		VALUES ($1::uuid, 'system', 'email_send_failed', $2, jsonb_build_object('class', $3::text, 'status', $4::text, 'error', $5::text))
+	`, sc.UserID, sc.RecruiterEmail, class.String(), status, truncate(err.Error(), 500))
 
 	if class == ClassRecipientReject {
 		_, _ = s.pool.Exec(ctx,

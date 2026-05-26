@@ -44,11 +44,12 @@ jobs:
 
       - name: Stage artifacts
         run: |
-          mkdir -p stage/{bin,migrations,deploy,web}
+          mkdir -p stage/{bin,migrations,deploy,web,scripts}
           cp dist/* stage/bin/
           cp -r migrations/* stage/migrations/
           cp -r deploy/* stage/deploy/
           cp -r web/out/* stage/web/
+          cp scripts/*.sh stage/scripts/ 2>/dev/null || true
 
       - name: Setup SSH
         env:
@@ -71,6 +72,7 @@ jobs:
           rsync -az --delete -e "ssh -p $PORT" stage/web/        "$USER@$HOST:/opt/kleos/web/"
           rsync -az --delete -e "ssh -p $PORT" stage/migrations/ "$USER@$HOST:/opt/kleos/migrations/"
           rsync -az          -e "ssh -p $PORT" stage/deploy/     "$USER@$HOST:/opt/kleos/deploy/"
+          rsync -az          -e "ssh -p $PORT" stage/scripts/    "$USER@$HOST:/opt/kleos/scripts/"
 
       - name: Run deploy.sh on VPS
         env:
