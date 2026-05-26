@@ -188,7 +188,7 @@ WITH updated_google AS (
 	    tos_accepted_at = COALESCE(tos_accepted_at, now()),
 	    updated_at = now()
 	WHERE google_sub = $1
-	RETURNING id::text, email::text, COALESCE(name, ''), is_admin
+	RETURNING id::text AS id, email::text AS email, COALESCE(name, '') AS name, is_admin
 ), inserted_or_linked AS (
 	INSERT INTO users (email, google_sub, name, email_verified_at, tos_accepted_at)
 	SELECT $2, $1, NULLIF($3, ''), now(), now()
@@ -200,7 +200,7 @@ WITH updated_google AS (
 	    name = COALESCE(NULLIF(EXCLUDED.name, ''), users.name),
 	    updated_at = now()
 	WHERE users.google_sub IS NULL OR users.google_sub = EXCLUDED.google_sub
-	RETURNING id::text, email::text, COALESCE(name, ''), is_admin
+	RETURNING id::text AS id, email::text AS email, COALESCE(name, '') AS name, is_admin
 )
 SELECT id, email, name, is_admin FROM updated_google
 UNION ALL

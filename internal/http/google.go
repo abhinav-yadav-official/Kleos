@@ -59,33 +59,37 @@ func registerGoogleAuthRoutes(r chi.Router, deps googleRouterDeps) {
 	})
 
 	r.Get("/api/auth/google/callback", func(w http.ResponseWriter, r *http.Request) {
-		failRedirect := func(reason string) {
-			slog.Warn("google callback failed", "reason", reason)
+		failRedirect := func(reason string, err error) {
+			if err != nil {
+				slog.Warn("google callback failed", "reason", reason, "error", err.Error())
+			} else {
+				slog.Warn("google callback failed", "reason", reason)
+			}
 			http.Redirect(w, r, frontend+"/?google_error="+url.QueryEscape(reason), http.StatusSeeOther)
 		}
 		if r.URL.Query().Get("error") != "" {
-			failRedirect(r.URL.Query().Get("error"))
+			failRedirect(r.URL.Query().Get("error"), nil)
 			return
 		}
 		cookie, err := r.Cookie(googleOAuthStateCookie)
 		if err != nil {
-			failRedirect("missing_state")
+			failRedirect("missing_state", err)
 			return
 		}
 		clearGoogleStateCookie(w, deps.Secure)
 		next, ok := parseGoogleOAuthState(r.URL.Query().Get("state"), cookie.Value)
 		if !ok {
-			failRedirect("invalid_state")
+			failRedirect("invalid_state", nil)
 			return
 		}
 		gu, err := deps.OAuth.ExchangeUser(r.Context(), r.URL.Query().Get("code"))
 		if err != nil {
-			failRedirect("exchange_failed")
+			failRedirect("exchange_failed", err)
 			return
 		}
 		result, err := deps.Auth.EnsureGoogleUser(r.Context(), gu.Sub, gu.Email, gu.Name)
 		if err != nil {
-			failRedirect("ensure_failed")
+			failRedirect("ensure_failed", err)
 			return
 		}
 		audit.Write(r.Context(), result.User.ID, "user", "google_signin", result.User.Email, nil)
