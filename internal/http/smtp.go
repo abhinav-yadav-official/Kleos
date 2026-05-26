@@ -13,6 +13,7 @@ type SMTPService interface {
 	List(ctx context.Context, userID string) ([]smtpcred.Credential, error)
 	Verify(ctx context.Context, userID, id string) (smtpcred.VerifyResult, error)
 	SetPrimary(ctx context.Context, userID, id string) (smtpcred.Credential, error)
+	Update(ctx context.Context, userID, id string, input smtpcred.UpdateInput) (smtpcred.Credential, error)
 	Delete(ctx context.Context, userID, id string) error
 }
 
@@ -71,6 +72,25 @@ func registerSMTPRoutes(r chi.Router, authService AuthService, smtpService SMTPS
 			writeError(w, http.StatusNotFound, "smtp_not_found", "SMTP credential not found")
 			return
 		}
+		writeJSON(w, http.StatusOK, map[string]smtpcred.Credential{"smtp": record})
+	})
+
+	r.Put("/api/smtp/{id}", func(w http.ResponseWriter, r *http.Request) {
+		user, ok := authenticatedUser(w, r, authService)
+		if !ok {
+			return
+		}
+		var req smtpcred.UpdateInput
+		if !decodeJSON(w, r, &req) {
+			return
+		}
+		id := chi.URLParam(r, "id")
+		record, err := smtpService.Update(r.Context(), user.ID, id, req)
+		if err != nil {
+			writeError(w, http.StatusNotFound, "smtp_not_found", "SMTP credential not found")
+			return
+		}
+		audit.Write(r.Context(), user.ID, "user", "smtp_updated", record.ID, map[string]any{"host": record.Host, "label": record.Label})
 		writeJSON(w, http.StatusOK, map[string]smtpcred.Credential{"smtp": record})
 	})
 

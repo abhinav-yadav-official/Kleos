@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, ErrorBanner, Input, Label } from "@/components/ui";
-import { ApiException, getAccess, login, signup } from "@/lib/api";
+import { ApiException, getAccess, login, setTokens, signup } from "@/lib/api";
 
 type Mode = "login" | "signup";
 
@@ -17,6 +17,24 @@ export default function LandingPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    // Google OAuth callback delivers tokens via URL fragment. Consume them,
+    // persist, and replace the URL before the rest of the page renders.
+    if (typeof window !== "undefined" && window.location.hash) {
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      const access = params.get("access");
+      const refresh = params.get("refresh");
+      if (access && refresh) {
+        setTokens({ access, refresh });
+        window.history.replaceState(null, "", window.location.pathname);
+        router.replace("/dashboard");
+        return;
+      }
+    }
+    if (typeof window !== "undefined") {
+      const qs = new URLSearchParams(window.location.search);
+      const ge = qs.get("google_error");
+      if (ge) setErr(`Google sign-in failed: ${ge}`);
+    }
     if (getAccess()) router.replace("/dashboard");
   }, [router]);
 
@@ -96,6 +114,28 @@ export default function LandingPage() {
             {busy ? "Working…" : mode === "login" ? "Log in" : "Create account"}
           </Button>
         </form>
+
+        <div className="my-4 flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-border" />
+          <span>or</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+        <a
+          href="/kleos/api/auth/google/start"
+          className="flex items-center justify-center gap-2 rounded-md border border-border bg-bg hover:bg-border/40 px-4 h-9 text-sm font-medium"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+            <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.88 2.68-6.63z" />
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.32A9 9 0 0 0 9 18z" />
+            <path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3.01-2.32z" />
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3.01 2.32C4.68 5.16 6.66 3.58 9 3.58z" />
+          </svg>
+          Continue with Google
+        </a>
+        <p className="text-xs text-muted mt-2">
+          Clicking continues with Google and accepts our{" "}
+          <a href="/kleos/privacy/" className="text-accent underline">privacy</a> terms.
+        </p>
       </Card>
     </div>
   );

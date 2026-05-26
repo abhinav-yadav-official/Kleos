@@ -97,6 +97,93 @@ func (s *Service) List(ctx context.Context, userID string) ([]Credential, error)
 	return records, rows.Err()
 }
 
+// Update applies a partial change to an existing credential owned by userID.
+// Password is optional: blank keeps the stored cipher. Any non-password field
+// edit clears verified_at + last_error so the next Verify reflects the new
+// config.
+func (s *Service) Update(ctx context.Context, userID, id string, input UpdateInput) (Credential, error) {
+	input.Host = strings.TrimSpace(input.Host)
+	input.Username = strings.TrimSpace(input.Username)
+	input.FromEmail = strings.TrimSpace(input.FromEmail)
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Credential{}, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	// Load current row to keep unchanged fields intact.
+	var cur Credential
+	var ciphertext, nonce []byte
+	err = tx.QueryRow(ctx, `
+		SELECT id::text, user_id::text, label, host, port, username, password_cipher, password_nonce,
+			from_email::text, COALESCE(from_name, ''), use_tls
+		FROM smtp_credentials WHERE id = $1 AND user_id = $2
+	`, id, userID).Scan(&cur.ID, &cur.UserID, &cur.Label, &cur.Host, &cur.Port, &cur.Username,
+		&ciphertext, &nonce, &cur.FromEmail, &cur.FromName, &cur.UseTLS)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Credential{}, pgx.ErrNoRows
+	}
+	if err != nil {
+		return Credential{}, err
+	}
+
+	if input.Label != "" {
+		cur.Label = input.Label
+	}
+	if input.Host != "" {
+		cur.Host = input.Host
+	}
+	if input.Port != 0 {
+		cur.Port = input.Port
+	}
+	if input.Username != "" {
+		cur.Username = input.Username
+	}
+	if input.FromEmail != "" {
+		cur.FromEmail = input.FromEmail
+	}
+	if input.FromName != "" {
+		cur.FromName = input.FromName
+	}
+	if input.UseTLS != nil {
+		cur.UseTLS = *input.UseTLS
+	}
+	if strings.TrimSpace(input.Password) != "" {
+		newCipher, newNonce, err := s.codec.EncryptString(input.Password)
+		if err != nil {
+			return Credential{}, err
+		}
+		ciphertext = newCipher
+		nonce = newNonce
+	}
+
+	record := Credential{}
+	err = tx.QueryRow(ctx, `
+		UPDATE smtp_credentials
+		SET label = $3, host = $4, port = $5, username = $6,
+		    password_cipher = $7, password_nonce = $8,
+		    from_email = $9, from_name = NULLIF($10, ''), use_tls = $11,
+		    verified_at = NULL, last_error = NULL
+		WHERE id = $1 AND user_id = $2
+		RETURNING id::text, user_id::text, label, host, port, username,
+			from_email::text, COALESCE(from_name, ''), use_tls, verified_at,
+			COALESCE(last_error, ''), is_primary, created_at
+	`, id, userID, cur.Label, cur.Host, cur.Port, cur.Username, ciphertext, nonce,
+		cur.FromEmail, cur.FromName, cur.UseTLS).Scan(
+		&record.ID, &record.UserID, &record.Label, &record.Host, &record.Port, &record.Username,
+		&record.FromEmail, &record.FromName, &record.UseTLS, &record.VerifiedAt,
+		&record.LastError, &record.IsPrimary, &record.CreatedAt,
+	)
+	if err != nil {
+		return Credential{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Credential{}, err
+	}
+	return record, nil
+}
+
 func (s *Service) Verify(ctx context.Context, userID, id string) (VerifyResult, error) {
 	input, err := s.verifyInput(ctx, userID, id)
 	if err != nil {

@@ -176,7 +176,7 @@ func (s *Service) ListDrafts(ctx context.Context, userID, campaignID string, lim
 		return nil, err
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT d.id::text, d.match_id::text, d.chosen, d.spam_score, d.subject, d.body_text, d.generated_at,
+		SELECT d.id::text, d.match_id::text, d.chosen, d.spam_score, d.subject, d.body_text, d.created_at,
 			j.title, COALESCE(co.name,''), r.email::text
 		FROM email_drafts d
 		JOIN campaign_matches m ON m.id = d.match_id
@@ -184,7 +184,7 @@ func (s *Service) ListDrafts(ctx context.Context, userID, campaignID string, lim
 		LEFT JOIN companies co ON co.id = j.company_id
 		JOIN recruiters r ON r.id = d.recruiter_id
 		WHERE m.campaign_id = $1::uuid
-		ORDER BY m.match_score DESC, m.matched_at DESC, d.chosen DESC, d.generated_at ASC
+		ORDER BY m.match_score DESC, m.matched_at DESC, d.chosen DESC, d.created_at ASC
 		LIMIT $2 OFFSET $3
 	`, campaignID, limit, offset)
 	if err != nil {
@@ -194,7 +194,7 @@ func (s *Service) ListDrafts(ctx context.Context, userID, campaignID string, lim
 	out := []DraftRow{}
 	for rows.Next() {
 		var d DraftRow
-		if err := rows.Scan(&d.ID, &d.MatchID, &d.Chosen, &d.SpamScore, &d.Subject, &d.BodyText, &d.GeneratedAt,
+		if err := rows.Scan(&d.ID, &d.MatchID, &d.Chosen, &d.SpamScore, &d.Subject, &d.BodyText, &d.CreatedAt,
 			&d.JobTitle, &d.CompanyName, &d.RecruiterEmail); err != nil {
 			return nil, err
 		}

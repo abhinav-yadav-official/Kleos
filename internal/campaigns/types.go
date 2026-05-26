@@ -46,7 +46,7 @@ type DraftRow struct {
 	SpamScore      float64   `json:"spam_score"`
 	Subject        string    `json:"subject"`
 	BodyText       string    `json:"body_text"`
-	GeneratedAt    time.Time `json:"generated_at"`
+	CreatedAt      time.Time `json:"created_at"`
 	JobTitle       string    `json:"job_title"`
 	CompanyName    string    `json:"company_name"`
 	RecruiterEmail string    `json:"recruiter_email"`

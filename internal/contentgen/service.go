@@ -190,7 +190,7 @@ func (s *Service) cloneFromCache(ctx context.Context, mc MatchContext, resumeHas
 		  AND d.recruiter_id = $2::uuid
 		  AND m.job_id = $3::uuid
 		  AND m.id <> $4::uuid
-		ORDER BY d.generated_at ASC
+		ORDER BY d.created_at ASC
 		LIMIT 3
 	`, resumeHash, mc.RecruiterID, mc.JobID, mc.MatchID)
 	if err != nil {

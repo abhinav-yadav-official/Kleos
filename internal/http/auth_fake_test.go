@@ -40,6 +40,15 @@ func (s *fakeAuthService) Signup(ctx context.Context, email, password, name stri
 	return s.issue(user), nil
 }
 
+func (s *fakeAuthService) EnsureGoogleUser(ctx context.Context, googleSub, email, name string) (AuthResult, error) {
+	if record, exists := s.usersByEmail[email]; exists {
+		return s.issue(record.user), nil
+	}
+	user := auth.User{ID: fmt.Sprintf("user-%d", len(s.usersByEmail)+1), Email: email, Name: name}
+	s.usersByEmail[email] = fakeUser{user: user}
+	return s.issue(user), nil
+}
+
 func (s *fakeAuthService) DeleteAccount(ctx context.Context, userID string) error {
 	for email, rec := range s.usersByEmail {
 		if rec.user.ID == userID {

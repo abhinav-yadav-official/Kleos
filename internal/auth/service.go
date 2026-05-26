@@ -171,6 +171,70 @@ func (s *Service) DeleteAccount(ctx context.Context, userID string) error {
 	return nil
 }
 
+// EnsureGoogleUser returns a verified user linked to the Google subject.
+// Insert path also marks ToS accepted (clicking "Continue with Google" implies
+// acceptance — the button copy must state this on the frontend) and stamps
+// email_verified_at since Google asserts the email is verified.
+func (s *Service) EnsureGoogleUser(ctx context.Context, googleSub, email, name string) (Result, error) {
+	googleSub = strings.TrimSpace(googleSub)
+	email = strings.ToLower(strings.TrimSpace(email))
+	if googleSub == "" || email == "" {
+		return Result{}, errors.New("auth: google subject and email are required")
+	}
+	const q = `
+WITH updated_google AS (
+	UPDATE users
+	SET email_verified_at = COALESCE(email_verified_at, now()),
+	    tos_accepted_at = COALESCE(tos_accepted_at, now()),
+	    updated_at = now()
+	WHERE google_sub = $1
+	RETURNING id::text, email::text, COALESCE(name, ''), is_admin
+), inserted_or_linked AS (
+	INSERT INTO users (email, google_sub, name, email_verified_at, tos_accepted_at)
+	SELECT $2, $1, NULLIF($3, ''), now(), now()
+	WHERE NOT EXISTS (SELECT 1 FROM updated_google)
+	ON CONFLICT (email) DO UPDATE
+	SET google_sub = EXCLUDED.google_sub,
+	    email_verified_at = COALESCE(users.email_verified_at, now()),
+	    tos_accepted_at = COALESCE(users.tos_accepted_at, now()),
+	    name = COALESCE(NULLIF(EXCLUDED.name, ''), users.name),
+	    updated_at = now()
+	WHERE users.google_sub IS NULL OR users.google_sub = EXCLUDED.google_sub
+	RETURNING id::text, email::text, COALESCE(name, ''), is_admin
+)
+SELECT id, email, name, is_admin FROM updated_google
+UNION ALL
+SELECT id, email, name, is_admin FROM inserted_or_linked
+LIMIT 1`
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return Result{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var user User
+	if err := tx.QueryRow(ctx, q, googleSub, email, name).Scan(&user.ID, &user.Email, &user.Name, &user.IsAdmin); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Result{}, errors.New("email already linked to another google account")
+		}
+		return Result{}, err
+	}
+	// Ensure preferences row exists for first-time google users; safe no-op
+	// otherwise due to ON CONFLICT.
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO preferences (user_id) VALUES ($1::uuid) ON CONFLICT (user_id) DO NOTHING`,
+		user.ID); err != nil {
+		return Result{}, err
+	}
+	result, err := s.issueTokens(ctx, tx, user)
+	if err != nil {
+		return Result{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Result{}, err
+	}
+	return result, nil
+}
+
 func (s *Service) UserFromAccessToken(ctx context.Context, access string) (User, error) {
 	claims, err := s.tokens.ParseAccessToken(access)
 	if err != nil {

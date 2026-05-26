@@ -29,6 +29,20 @@ type CreateInput struct {
 	UseTLS    bool   `json:"use_tls"`
 }
 
+// UpdateInput is a partial update for an existing credential. Empty Password
+// preserves the stored cipher; any other empty field is ignored. Pointer bools
+// allow toggling use_tls without losing the previous value when omitted.
+type UpdateInput struct {
+	Label     string `json:"label"`
+	Host      string `json:"host"`
+	Port      int    `json:"port"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	FromEmail string `json:"from_email"`
+	FromName  string `json:"from_name"`
+	UseTLS    *bool  `json:"use_tls"`
+}
+
 type VerifyResult struct {
 	OK     bool   `json:"ok"`
 	Detail string `json:"detail"`

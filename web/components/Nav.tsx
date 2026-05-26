@@ -7,6 +7,7 @@ import { clearTokens, getAccess, logout, me, User } from "@/lib/api";
 const links = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/campaigns", label: "Campaigns" },
+  { href: "/onboarding/recipients", label: "Recipients" },
   { href: "/settings", label: "Settings" },
 ];
 

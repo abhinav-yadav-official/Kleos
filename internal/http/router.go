@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/abhinav-yadav-official/Kleos/internal/auth"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -24,6 +25,16 @@ type Dependencies struct {
 	Admin       AdminService
 	Warmup      WarmupService
 	Audit       AuditWriter
+	Google      GoogleDeps
+}
+
+// GoogleDeps wires the Google OAuth flow when the env credentials are set.
+// Leave OAuth nil to disable.
+type GoogleDeps struct {
+	OAuth       *auth.GoogleOAuth
+	Service     GoogleAuthService
+	FrontendURL string
+	Secure      bool
 }
 
 // AuditWriter is the narrow interface satisfied by *audit.Logger.
@@ -90,9 +101,19 @@ func NewRouter(deps Dependencies) http.Handler {
 	}
 	if deps.Auth != nil && deps.Admin != nil {
 		registerAdminRoutes(r, deps.Auth, deps.Admin, audit)
+		registerRecipientsRoutes(r, deps.Auth, deps.Admin, audit)
 	}
 	if deps.Auth != nil && deps.Warmup != nil {
 		registerWarmupRoutes(r, deps.Auth, deps.Warmup)
+	}
+	if deps.Google.OAuth != nil && deps.Google.Service != nil {
+		registerGoogleAuthRoutes(r, googleRouterDeps{
+			OAuth:       deps.Google.OAuth,
+			Auth:        deps.Google.Service,
+			Audit:       audit,
+			FrontendURL: deps.Google.FrontendURL,
+			Secure:      deps.Google.Secure,
+		})
 	}
 
 	return r

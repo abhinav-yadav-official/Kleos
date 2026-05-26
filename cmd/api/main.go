@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -64,9 +65,30 @@ func main() {
 	warmupAdapter := newWarmupAdapter(postgres.Pool())
 	auditLogger := audit.NewLogger(postgres.Pool())
 
+	googleOAuth, err := auth.GoogleOAuthFromEnv(cfg.AppBaseURL)
+	if err != nil {
+		slog.Error("google oauth init", "error", err)
+		os.Exit(1)
+	}
+	if googleOAuth == nil {
+		slog.Info("google oauth disabled (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET not set)")
+	} else {
+		slog.Info("google oauth enabled", "redirect_url", googleOAuth.RedirectURL)
+	}
+	googleDeps := apphttp.GoogleDeps{
+		OAuth:       googleOAuth,
+		Service:     authService,
+		FrontendURL: strings.TrimRight(cfg.AppBaseURL, "/") + "/kleos",
+		Secure:      strings.HasPrefix(cfg.AppBaseURL, "https://"),
+	}
+
 	server := &http.Server{
-		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService, Admin: adminService, Warmup: warmupAdapter, Audit: auditLogger}),
+		Addr: ":" + cfg.AppPort,
+		Handler: apphttp.NewRouter(apphttp.Dependencies{
+			DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService,
+			Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService,
+			Admin: adminService, Warmup: warmupAdapter, Audit: auditLogger, Google: googleDeps,
+		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

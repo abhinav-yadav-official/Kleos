@@ -64,6 +64,38 @@ func (s *fakeSMTPService) SetPrimary(ctx context.Context, userID, id string) (sm
 	return record, nil
 }
 
+func (s *fakeSMTPService) Update(ctx context.Context, userID, id string, input smtpcred.UpdateInput) (smtpcred.Credential, error) {
+	rec, exists := s.records[id]
+	if !exists || rec.UserID != userID {
+		return smtpcred.Credential{}, errors.New("not found")
+	}
+	if input.Label != "" {
+		rec.Label = input.Label
+	}
+	if input.Host != "" {
+		rec.Host = input.Host
+	}
+	if input.Port != 0 {
+		rec.Port = input.Port
+	}
+	if input.Username != "" {
+		rec.Username = input.Username
+	}
+	if input.FromEmail != "" {
+		rec.FromEmail = input.FromEmail
+	}
+	if input.FromName != "" {
+		rec.FromName = input.FromName
+	}
+	if input.UseTLS != nil {
+		rec.UseTLS = *input.UseTLS
+	}
+	rec.VerifiedAt = nil
+	rec.LastError = ""
+	s.records[id] = rec
+	return rec, nil
+}
+
 func (s *fakeSMTPService) Delete(ctx context.Context, userID, id string) error {
 	if _, exists := s.records[id]; !exists {
 		return errors.New("not found")

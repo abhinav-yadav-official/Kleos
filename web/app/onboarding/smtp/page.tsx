@@ -2,22 +2,36 @@
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
 import { Badge, Button, Card, ErrorBanner, Input, Label } from "@/components/ui";
-import { ApiException, createSmtp, deleteSmtp, listSmtp, setPrimarySmtp, Smtp, verifySmtp } from "@/lib/api";
+import { ApiException, createSmtp, deleteSmtp, listSmtp, setPrimarySmtp, Smtp, updateSmtp, verifySmtp } from "@/lib/api";
+
+type FormState = {
+  label: string;
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  from_email: string;
+  from_name: string;
+  use_tls: boolean;
+};
+
+const emptyForm: FormState = {
+  label: "primary",
+  host: "smtp.gmail.com",
+  port: 465,
+  username: "",
+  password: "",
+  from_email: "",
+  from_name: "",
+  use_tls: true,
+};
 
 export default function OnboardingSmtpPage() {
   const [items, setItems] = useState<Smtp[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({
-    label: "primary",
-    host: "smtp.gmail.com",
-    port: 465,
-    username: "",
-    password: "",
-    from_email: "",
-    from_name: "",
-    use_tls: true,
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm);
 
   async function reload() {
     try {
@@ -30,13 +44,43 @@ export default function OnboardingSmtpPage() {
     reload();
   }, []);
 
+  function startEdit(s: Smtp) {
+    setEditingId(s.id);
+    setForm({
+      label: s.label,
+      host: s.host,
+      port: s.port,
+      username: s.username,
+      password: "",
+      from_email: s.from_email,
+      from_name: s.from_name ?? "",
+      use_tls: s.use_tls,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setErr(null);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setBusy(true);
     try {
-      await createSmtp({ ...form, from_email: form.from_email || form.username });
-      setForm({ ...form, password: "" });
+      const fromEmail = form.from_email || form.username;
+      if (editingId) {
+        // Editing: drop the password key when blank so the server keeps the
+        // existing cipher.
+        const { password, ...rest } = form;
+        const patch: Partial<FormState> = { ...rest, from_email: fromEmail };
+        if (password.trim() !== "") patch.password = password;
+        await updateSmtp(editingId, patch);
+      } else {
+        await createSmtp({ ...form, from_email: fromEmail });
+      }
+      cancelEdit();
       await reload();
     } catch (e) {
       setErr(asMessage(e));
@@ -66,11 +110,20 @@ export default function OnboardingSmtpPage() {
       <p className="text-sm text-muted mb-6 max-w-2xl">
         Add the SMTP credential Kleos will send from. Gmail: enable 2FA, create an app password,
         host <span className="font-mono">smtp.gmail.com</span> port <span className="font-mono">465</span>, TLS on.
-        ForwardEmail/custom: use port 465 or 587.
+        ForwardEmail/custom: use port 465 or 587. Editing an existing credential clears its verified
+        status; re-verify after saving.
       </p>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-medium">{editingId ? "Edit credential" : "Add credential"}</div>
+            {editingId && (
+              <button onClick={cancelEdit} className="text-xs text-muted hover:text-text">
+                Cancel
+              </button>
+            )}
+          </div>
           <form onSubmit={submit} className="space-y-3">
             <div>
               <Label>Label</Label>
@@ -91,8 +144,14 @@ export default function OnboardingSmtpPage() {
               <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required autoComplete="username" />
             </div>
             <div>
-              <Label>Password / App password</Label>
-              <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required autoComplete="new-password" />
+              <Label>Password / App password{editingId && " (leave blank to keep existing)"}</Label>
+              <Input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required={!editingId}
+                autoComplete="new-password"
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -109,7 +168,9 @@ export default function OnboardingSmtpPage() {
               Use TLS (STARTTLS or implicit on 465)
             </label>
             <ErrorBanner message={err} />
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "Working…" : "Add credential"}</Button>
+            <Button type="submit" disabled={busy} className="w-full">
+              {busy ? "Working…" : editingId ? "Save changes" : "Add credential"}
+            </Button>
           </form>
         </Card>
 
@@ -131,6 +192,7 @@ export default function OnboardingSmtpPage() {
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">
                   <Button variant="ghost" onClick={() => verify(s.id)} disabled={busy}>Verify</Button>
+                  <Button variant="ghost" onClick={() => startEdit(s)} disabled={busy}>Edit</Button>
                   {!s.is_primary && (
                     <Button variant="ghost" onClick={async () => { await setPrimarySmtp(s.id); reload(); }} disabled={busy}>
                       Make primary

@@ -178,6 +178,19 @@ export async function setPrimarySmtp(id: string): Promise<Smtp> {
 export async function deleteSmtp(id: string): Promise<void> {
   await apiFetch(`/smtp/${id}`, { method: "DELETE" });
 }
+export async function updateSmtp(id: string, patch: Partial<{
+  label: string;
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  from_email: string;
+  from_name: string;
+  use_tls: boolean;
+}>): Promise<Smtp> {
+  const body = await apiFetch<{ smtp: Smtp }>(`/smtp/${id}`, { method: "PUT", body: JSON.stringify(patch) });
+  return body.smtp;
+}
 
 export type Resume = {
   id: string;
@@ -287,7 +300,7 @@ export type DraftRow = {
   spam_score: number;
   subject: string;
   body_text: string;
-  generated_at: string;
+  created_at: string;
   job_title: string;
   company_name: string;
   recruiter_email: string;
@@ -327,4 +340,15 @@ export type Warmup = {
 export async function getWarmup(): Promise<Warmup | null> {
   const body = await apiFetch<{ warmup: Warmup | null }>("/warmup");
   return body.warmup;
+}
+
+export type RecipientEntry = { email: string; name?: string; title?: string };
+export async function addRecipients(input: {
+  company_slug: string;
+  domain?: string;
+  careers_url?: string;
+  github_org?: string;
+  emails: RecipientEntry[];
+}): Promise<{ company_id: string; inserted: number; submitted: number }> {
+  return apiFetch("/recipients", { method: "POST", body: JSON.stringify(input) });
 }
