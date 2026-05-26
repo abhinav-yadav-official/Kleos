@@ -75,10 +75,14 @@ func main() {
 	} else {
 		slog.Info("google oauth enabled", "redirect_url", googleOAuth.RedirectURL)
 	}
+	frontendBase := strings.TrimRight(cfg.AppBaseURL, "/")
+	if !strings.HasSuffix(frontendBase, "/kleos") {
+		frontendBase += "/kleos"
+	}
 	googleDeps := apphttp.GoogleDeps{
 		OAuth:       googleOAuth,
 		Service:     authService,
-		FrontendURL: strings.TrimRight(cfg.AppBaseURL, "/") + "/kleos",
+		FrontendURL: frontendBase,
 		Secure:      strings.HasPrefix(cfg.AppBaseURL, "https://"),
 	}
 

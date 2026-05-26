@@ -54,6 +54,8 @@ func GoogleOAuthFromEnv(appBase string) (*GoogleOAuth, error) {
 	if appBase == "" {
 		return nil, errors.New("auth: app base required for google oauth")
 	}
+	// APP_BASE_URL may already include the /kleos prefix; tolerate either form.
+	appBase = strings.TrimSuffix(appBase, "/kleos")
 	return &GoogleOAuth{
 		ClientID:         clientID,
 		ClientSecret:     clientSecret,
