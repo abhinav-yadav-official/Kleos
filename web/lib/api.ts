@@ -98,13 +98,18 @@ export async function apiFetch<T = unknown>(
 export type User = { id: string; email: string; name: string; is_admin?: boolean };
 export type AuthResponse = { user: User; access: string; refresh: string };
 
-export async function signup(email: string, password: string, name: string) {
+export async function signup(email: string, password: string, name: string, tosAccepted: boolean) {
   const out = await apiFetch<AuthResponse>("/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ email, password, name }),
+    body: JSON.stringify({ email, password, name, tos_accepted: tosAccepted }),
   }, { auth: false });
   setTokens({ access: out.access, refresh: out.refresh });
   return out.user;
+}
+
+export async function deleteAccount(): Promise<void> {
+  await apiFetch("/auth/account", { method: "DELETE" });
+  clearTokens();
 }
 
 export async function login(email: string, password: string) {

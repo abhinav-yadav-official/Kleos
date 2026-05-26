@@ -12,7 +12,7 @@ import (
 
 func TestSMTPRoutesCreateListVerifyPrimaryAndDelete(t *testing.T) {
 	auth := newFakeAuthService()
-	authResult, err := auth.Signup(context.Background(), "smtp@example.com", "password123", "SMTP User")
+	authResult, err := auth.Signup(context.Background(), "smtp@example.com", "password123", "SMTP User", true)
 	if err != nil {
 		t.Fatalf("signup fake user: %v", err)
 	}

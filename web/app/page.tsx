@@ -12,6 +12,7 @@ export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [tosAccepted, setTosAccepted] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -25,7 +26,7 @@ export default function LandingPage() {
     setBusy(true);
     try {
       if (mode === "login") await login(email, password);
-      else await signup(email, password, name || email.split("@")[0]);
+      else await signup(email, password, name || email.split("@")[0], tosAccepted);
       router.push("/dashboard");
     } catch (e) {
       setErr(e instanceof ApiException ? e.body.message : (e as Error).message);
@@ -76,8 +77,22 @@ export default function LandingPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === "login" ? "current-password" : "new-password"} />
           </div>
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={tosAccepted}
+                onChange={(e) => setTosAccepted(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I confirm I have a lawful basis to contact each recruiter I send mail to.
+                See <a href="/kleos/privacy/" className="text-accent underline">privacy</a>.
+              </span>
+            </label>
+          )}
           <ErrorBanner message={err} />
-          <Button type="submit" disabled={busy} className="w-full">
+          <Button type="submit" disabled={busy || (mode === "signup" && !tosAccepted)} className="w-full">
             {busy ? "Working…" : mode === "login" ? "Log in" : "Create account"}
           </Button>
         </form>

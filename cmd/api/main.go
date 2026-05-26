@@ -50,7 +50,7 @@ func main() {
 		slog.Error("parse JWT_REFRESH_TTL", "error", err)
 		os.Exit(1)
 	}
-	authService := auth.NewService(postgres.Pool(), cfg.JWTSecret, accessTTL, refreshTTL)
+	authService := auth.NewServiceWithRotation(postgres.Pool(), cfg.JWTSecret, cfg.JWTSecretPrevious, accessTTL, refreshTTL)
 	smtpCodec, err := appcrypto.NewAESGCM(cfg.SMTPKey)
 	if err != nil {
 		slog.Error("create SMTP credential codec", "error", err)

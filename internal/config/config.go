@@ -11,9 +11,10 @@ type Config struct {
 	RedisPassword string
 	LogDir        string
 	LogLevel      string
-	JWTSecret     string
-	JWTAccessTTL  string
-	JWTRefreshTTL string
+	JWTSecret         string
+	JWTSecretPrevious string
+	JWTAccessTTL      string
+	JWTRefreshTTL     string
 	SMTPKey       string
 	ResumeStorage string
 }
@@ -28,9 +29,10 @@ func Load() Config {
 		RedisPassword: getenv("REDIS_PASSWORD", ""),
 		LogDir:        getenv("LOG_DIR", "./logs"),
 		LogLevel:      getenv("LOG_LEVEL", "info"),
-		JWTSecret:     getenv("JWT_SECRET", "dev-secret-change-me"),
-		JWTAccessTTL:  getenv("JWT_ACCESS_TTL", "15m"),
-		JWTRefreshTTL: getenv("JWT_REFRESH_TTL", "720h"),
+		JWTSecret:         getenv("JWT_SECRET", "dev-secret-change-me"),
+		JWTSecretPrevious: getenv("JWT_SECRET_PREVIOUS", ""),
+		JWTAccessTTL:      getenv("JWT_ACCESS_TTL", "15m"),
+		JWTRefreshTTL:     getenv("JWT_REFRESH_TTL", "720h"),
 		SMTPKey:       getenv("SMTP_CRED_ENCRYPTION_KEY", "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"),
 		ResumeStorage: getenv("RESUME_STORAGE_DIR", "./data/resumes"),
 	}

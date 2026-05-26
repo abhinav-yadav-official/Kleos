@@ -14,11 +14,12 @@ import (
 var errUnauthorized = errors.New("unauthorized")
 
 type AuthService interface {
-	Signup(ctx context.Context, email, password, name string) (AuthResult, error)
+	Signup(ctx context.Context, email, password, name string, tosAccepted bool) (AuthResult, error)
 	Login(ctx context.Context, email, password string) (AuthResult, error)
 	Refresh(ctx context.Context, refresh string) (AuthResult, error)
 	Logout(ctx context.Context, refresh string) error
 	UserFromAccessToken(ctx context.Context, access string) (auth.User, error)
+	DeleteAccount(ctx context.Context, userID string) error
 }
 
 type AuthResult = auth.Result
@@ -39,7 +40,7 @@ func registerAuthRoutes(r chi.Router, service AuthService, authRouteMW func(http
 		if !decodeJSON(w, r, &req) {
 			return
 		}
-		result, err := service.Signup(r.Context(), req.Email, req.Password, req.Name)
+		result, err := service.Signup(r.Context(), req.Email, req.Password, req.Name, req.TOSAccepted)
 		if err != nil {
 			audit.Write(r.Context(), "", "system", "signup_failed", req.Email, map[string]any{"reason": err.Error()})
 			writeError(w, http.StatusBadRequest, "signup_failed", err.Error())
@@ -108,12 +109,33 @@ func registerAuthRoutes(r chi.Router, service AuthService, authRouteMW func(http
 		}
 		writeJSON(w, http.StatusOK, map[string]auth.User{"user": user})
 	})
+
+	deleteAccountHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := bearerToken(r)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "missing bearer token")
+			return
+		}
+		user, err := service.UserFromAccessToken(r.Context(), token)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "invalid bearer token")
+			return
+		}
+		if err := service.DeleteAccount(r.Context(), user.ID); err != nil {
+			writeError(w, http.StatusInternalServerError, "delete_failed", err.Error())
+			return
+		}
+		audit.Write(r.Context(), user.ID, "user", "account_deleted", user.Email, nil)
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	})
+	r.Method("DELETE", "/api/auth/account", deleteAccountHandler)
 }
 
 type authCredentialsRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	Name        string `json:"name"`
+	TOSAccepted bool   `json:"tos_accepted"`
 }
 
 type refreshRequest struct {

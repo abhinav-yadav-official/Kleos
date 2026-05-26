@@ -1,15 +1,18 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Nav } from "@/components/Nav";
-import { Badge, Card, ErrorBanner } from "@/components/ui";
-import { ApiException, getWarmup, listResumes, listSmtp, Resume, Smtp, Warmup } from "@/lib/api";
+import { Badge, Button, Card, ErrorBanner } from "@/components/ui";
+import { ApiException, deleteAccount, getWarmup, listResumes, listSmtp, Resume, Smtp, Warmup } from "@/lib/api";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [smtp, setSmtp] = useState<Smtp[]>([]);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [warmup, setWarmup] = useState<Warmup | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([listSmtp(), listResumes(), getWarmup().catch(() => null)])
@@ -92,6 +95,35 @@ export default function SettingsPage() {
         <h2 className="text-sm uppercase tracking-wide text-muted mb-2">Preferences</h2>
         <Card>
           <Link href="/onboarding/preferences" className="text-accent text-sm">Edit preferences →</Link>
+        </Card>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="text-sm uppercase tracking-wide text-err mb-2">Danger zone</h2>
+        <Card className="border-err/50">
+          <p className="text-sm text-muted mb-3">
+            Delete account permanently removes your user record, refresh tokens, preferences,
+            SMTP credentials, resumes, campaigns, matches, drafts, and sent-email history.
+            Audit-log rows are retained with user_id cleared. Action cannot be undone.
+          </p>
+          <Button
+            variant="danger"
+            disabled={deleting}
+            onClick={async () => {
+              if (!confirm("Permanently delete your account and all data? This cannot be undone.")) return;
+              setDeleting(true);
+              try {
+                await deleteAccount();
+                router.replace("/");
+              } catch (e) {
+                setErr(asMessage(e));
+              } finally {
+                setDeleting(false);
+              }
+            }}
+          >
+            {deleting ? "Deleting…" : "Delete account"}
+          </Button>
         </Card>
       </section>
     </>

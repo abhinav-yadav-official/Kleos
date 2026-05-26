@@ -28,13 +28,26 @@ func newFakeAuthService() *fakeAuthService {
 	}
 }
 
-func (s *fakeAuthService) Signup(ctx context.Context, email, password, name string) (AuthResult, error) {
+func (s *fakeAuthService) Signup(ctx context.Context, email, password, name string, tosAccepted bool) (AuthResult, error) {
+	if !tosAccepted {
+		return AuthResult{}, errors.New("terms of service must be accepted")
+	}
 	if _, exists := s.usersByEmail[email]; exists {
 		return AuthResult{}, errors.New("email already exists")
 	}
 	user := auth.User{ID: fmt.Sprintf("user-%d", len(s.usersByEmail)+1), Email: email, Name: name}
 	s.usersByEmail[email] = fakeUser{user: user, password: password}
 	return s.issue(user), nil
+}
+
+func (s *fakeAuthService) DeleteAccount(ctx context.Context, userID string) error {
+	for email, rec := range s.usersByEmail {
+		if rec.user.ID == userID {
+			delete(s.usersByEmail, email)
+			return nil
+		}
+	}
+	return errors.New("not found")
 }
 
 func (s *fakeAuthService) Login(ctx context.Context, email, password string) (AuthResult, error) {

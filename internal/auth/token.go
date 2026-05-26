@@ -24,13 +24,40 @@ type AccessClaims struct {
 	jwt.RegisteredClaims
 }
 
+// TokenManager signs tokens with the current secret and verifies tokens that
+// were signed with either the current or the previous secret (for grace-period
+// JWT rotation). The `kid` header on the JWT picks the secret on parse; tokens
+// without a kid (legacy) try current then previous.
 type TokenManager struct {
-	secret    []byte
-	accessTTL time.Duration
+	currentKid     string
+	currentSecret  []byte
+	previousSecret []byte // optional; empty disables previous-secret verification
+	accessTTL      time.Duration
 }
 
+const (
+	KidCurrent  = "current"
+	KidPrevious = "previous"
+)
+
+// NewTokenManager constructs a manager with a single (current) secret. Backward
+// compatible with code that has not yet adopted rotation.
 func NewTokenManager(secret string, accessTTL time.Duration) TokenManager {
-	return TokenManager{secret: []byte(secret), accessTTL: accessTTL}
+	return TokenManager{
+		currentKid:    KidCurrent,
+		currentSecret: []byte(secret),
+		accessTTL:     accessTTL,
+	}
+}
+
+// NewTokenManagerWithRotation lets callers wire a previous secret for the grace
+// period; tokens signed by either will still verify until natural expiry.
+func NewTokenManagerWithRotation(currentSecret, previousSecret string, accessTTL time.Duration) TokenManager {
+	m := NewTokenManager(currentSecret, accessTTL)
+	if previousSecret != "" {
+		m.previousSecret = []byte(previousSecret)
+	}
+	return m
 }
 
 func (m TokenManager) CreateAccessToken(user User) (string, error) {
@@ -44,24 +71,37 @@ func (m TokenManager) CreateAccessToken(user User) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(m.accessTTL)),
 		},
 	}
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(m.secret)
+	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tok.Header["kid"] = m.currentKid
+	return tok.SignedString(m.currentSecret)
 }
 
 func (m TokenManager) ParseAccessToken(raw string) (AccessClaims, error) {
-	claims := AccessClaims{}
-	token, err := jwt.ParseWithClaims(raw, &claims, func(token *jwt.Token) (any, error) {
-		if token.Method != jwt.SigningMethodHS256 {
-			return nil, errors.New("unexpected signing method")
+	// Try current secret first; on failure, fall back to previous-secret if
+	// configured. kid header is informational and not used for dispatch — that
+	// way rotating the "current" secret still verifies tokens signed under the
+	// old "current" because we retry with previous.
+	for _, secret := range m.candidateSecrets() {
+		claims := AccessClaims{}
+		token, err := jwt.ParseWithClaims(raw, &claims, func(token *jwt.Token) (any, error) {
+			if token.Method != jwt.SigningMethodHS256 {
+				return nil, errors.New("unexpected signing method")
+			}
+			return secret, nil
+		})
+		if err == nil && token.Valid {
+			return claims, nil
 		}
-		return m.secret, nil
-	})
-	if err != nil {
-		return AccessClaims{}, err
 	}
-	if !token.Valid {
-		return AccessClaims{}, errors.New("invalid token")
+	return AccessClaims{}, errors.New("invalid token")
+}
+
+func (m TokenManager) candidateSecrets() [][]byte {
+	out := [][]byte{m.currentSecret}
+	if len(m.previousSecret) > 0 {
+		out = append(out, m.previousSecret)
 	}
-	return claims, nil
+	return out
 }
 
 func NewRefreshToken() (string, error) {

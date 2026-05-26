@@ -30,17 +30,29 @@ type Result struct {
 }
 
 func NewService(pool *pgxpool.Pool, jwtSecret string, accessTTL, refreshTTL time.Duration) *Service {
+	return NewServiceWithRotation(pool, jwtSecret, "", accessTTL, refreshTTL)
+}
+
+// NewServiceWithRotation lets callers wire a previous JWT secret for the
+// rotation grace period. Tokens signed under either secret will verify until
+// natural expiry.
+func NewServiceWithRotation(pool *pgxpool.Pool, jwtSecret, jwtSecretPrevious string, accessTTL, refreshTTL time.Duration) *Service {
 	return &Service{
 		pool:       pool,
-		tokens:     NewTokenManager(jwtSecret, accessTTL),
+		tokens:     NewTokenManagerWithRotation(jwtSecret, jwtSecretPrevious, accessTTL),
 		refreshTTL: refreshTTL,
 	}
 }
 
-func (s *Service) Signup(ctx context.Context, email, password, name string) (Result, error) {
+var ErrTOSNotAccepted = errors.New("terms of service must be accepted")
+
+func (s *Service) Signup(ctx context.Context, email, password, name string, tosAccepted bool) (Result, error) {
 	email = normalizeEmail(email)
 	if email == "" || len(password) < 8 {
 		return Result{}, ErrInvalidCredentials
+	}
+	if !tosAccepted {
+		return Result{}, ErrTOSNotAccepted
 	}
 	hash, err := HashPassword(password)
 	if err != nil {
@@ -57,8 +69,8 @@ func (s *Service) Signup(ctx context.Context, email, password, name string) (Res
 
 	user := User{}
 	err = tx.QueryRow(ctx, `
-		INSERT INTO users (email, password_hash, name)
-		VALUES ($1, $2, $3)
+		INSERT INTO users (email, password_hash, name, tos_accepted_at)
+		VALUES ($1, $2, $3, now())
 		RETURNING id::text, email::text, COALESCE(name, '')
 	`, email, hash, name).Scan(&user.ID, &user.Email, &user.Name)
 	if err != nil {
@@ -140,6 +152,21 @@ func (s *Service) Logout(ctx context.Context, refresh string) error {
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrInvalidRefresh
+	}
+	return nil
+}
+
+// DeleteAccount permanently removes the user and cascades to all owned rows
+// (refresh tokens, preferences, smtp_credentials, resumes, campaigns,
+// campaign_matches, email_drafts, sent_emails, warmup_state). audit_log rows
+// are preserved with user_id=NULL.
+func (s *Service) DeleteAccount(ctx context.Context, userID string) error {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM users WHERE id = $1::uuid`, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrInvalidAccess
 	}
 	return nil
 }

@@ -13,7 +13,7 @@ import (
 
 func TestPreferencesRoutesGetAndPutRoundTrip(t *testing.T) {
 	auth := newFakeAuthService()
-	authResult, err := auth.Signup(context.Background(), "prefs@example.com", "password123", "Prefs User")
+	authResult, err := auth.Signup(context.Background(), "prefs@example.com", "password123", "Prefs User", true)
 	if err != nil {
 		t.Fatalf("signup fake user: %v", err)
 	}

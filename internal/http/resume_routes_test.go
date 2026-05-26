@@ -14,7 +14,7 @@ import (
 
 func TestResumeRoutesUploadListActivateAndDelete(t *testing.T) {
 	auth := newFakeAuthService()
-	authResult, err := auth.Signup(context.Background(), "resume@example.com", "password123", "Resume User")
+	authResult, err := auth.Signup(context.Background(), "resume@example.com", "password123", "Resume User", true)
 	if err != nil {
 		t.Fatalf("signup fake user: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestResumeRoutesUploadListActivateAndDelete(t *testing.T) {
 
 func TestResumeUploadRejectsNonPDF(t *testing.T) {
 	auth := newFakeAuthService()
-	authResult, err := auth.Signup(context.Background(), "bad-resume@example.com", "password123", "Resume User")
+	authResult, err := auth.Signup(context.Background(), "bad-resume@example.com", "password123", "Resume User", true)
 	if err != nil {
 		t.Fatalf("signup fake user: %v", err)
 	}
