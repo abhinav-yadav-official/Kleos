@@ -171,6 +171,83 @@ func (s *Service) ListMatches(ctx context.Context, userID, campaignID, state str
 	return out, rows.Err()
 }
 
+func (s *Service) ListDrafts(ctx context.Context, userID, campaignID string, limit, offset int) ([]DraftRow, error) {
+	if err := s.assertOwns(ctx, userID, campaignID); err != nil {
+		return nil, err
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT d.id::text, d.match_id::text, d.chosen, d.spam_score, d.subject, d.body_text, d.generated_at,
+			j.title, COALESCE(co.name,''), r.email::text
+		FROM email_drafts d
+		JOIN campaign_matches m ON m.id = d.match_id
+		JOIN jobs j ON j.id = m.job_id
+		LEFT JOIN companies co ON co.id = j.company_id
+		JOIN recruiters r ON r.id = d.recruiter_id
+		WHERE m.campaign_id = $1::uuid
+		ORDER BY m.match_score DESC, m.matched_at DESC, d.chosen DESC, d.generated_at ASC
+		LIMIT $2 OFFSET $3
+	`, campaignID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []DraftRow{}
+	for rows.Next() {
+		var d DraftRow
+		if err := rows.Scan(&d.ID, &d.MatchID, &d.Chosen, &d.SpamScore, &d.Subject, &d.BodyText, &d.GeneratedAt,
+			&d.JobTitle, &d.CompanyName, &d.RecruiterEmail); err != nil {
+			return nil, err
+		}
+		out = append(out, d)
+	}
+	return out, rows.Err()
+}
+
+func (s *Service) ListSent(ctx context.Context, userID, campaignID string, limit, offset int) ([]SentRow, error) {
+	if err := s.assertOwns(ctx, userID, campaignID); err != nil {
+		return nil, err
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT se.id::text, se.match_id::text, se.recruiter_email::text, se.message_id,
+			se.status, COALESCE(se.smtp_response,''), se.sent_at,
+			j.title, COALESCE(co.name,'')
+		FROM sent_emails se
+		JOIN campaign_matches m ON m.id = se.match_id
+		JOIN jobs j ON j.id = m.job_id
+		LEFT JOIN companies co ON co.id = j.company_id
+		WHERE m.campaign_id = $1::uuid
+		ORDER BY se.sent_at DESC
+		LIMIT $2 OFFSET $3
+	`, campaignID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []SentRow{}
+	for rows.Next() {
+		var e SentRow
+		if err := rows.Scan(&e.ID, &e.MatchID, &e.RecruiterEmail, &e.MessageID,
+			&e.Status, &e.SMTPResponse, &e.SentAt, &e.JobTitle, &e.CompanyName); err != nil {
+			return nil, err
+		}
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+
+func (s *Service) assertOwns(ctx context.Context, userID, campaignID string) error {
+	var owns bool
+	if err := s.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM campaigns WHERE id=$1::uuid AND user_id=$2::uuid)`,
+		campaignID, userID).Scan(&owns); err != nil {
+		return err
+	}
+	if !owns {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Service) SetStatus(ctx context.Context, userID, id, status string) (Campaign, error) {
 	if !ValidStatus(status) {
 		return Campaign{}, fmt.Errorf("invalid status: %s", status)

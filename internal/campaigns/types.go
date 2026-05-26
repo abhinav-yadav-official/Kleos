@@ -39,6 +39,31 @@ type MatchRow struct {
 	CompanyName string    `json:"company_name"`
 }
 
+type DraftRow struct {
+	ID             string    `json:"id"`
+	MatchID        string    `json:"match_id"`
+	Chosen         bool      `json:"chosen"`
+	SpamScore      float64   `json:"spam_score"`
+	Subject        string    `json:"subject"`
+	BodyText       string    `json:"body_text"`
+	GeneratedAt    time.Time `json:"generated_at"`
+	JobTitle       string    `json:"job_title"`
+	CompanyName    string    `json:"company_name"`
+	RecruiterEmail string    `json:"recruiter_email"`
+}
+
+type SentRow struct {
+	ID             string    `json:"id"`
+	MatchID        string    `json:"match_id"`
+	RecruiterEmail string    `json:"recruiter_email"`
+	MessageID      string    `json:"message_id"`
+	Status         string    `json:"status"`
+	SMTPResponse   string    `json:"smtp_response"`
+	SentAt         time.Time `json:"sent_at"`
+	JobTitle       string    `json:"job_title"`
+	CompanyName    string    `json:"company_name"`
+}
+
 func ValidStatus(s string) bool {
 	switch s {
 	case StatusActive, StatusPaused, StatusArchived:

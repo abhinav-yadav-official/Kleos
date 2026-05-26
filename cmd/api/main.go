@@ -60,10 +60,11 @@ func main() {
 	preferencesService := preferences.NewService(postgres.Pool())
 	campaignService := campaigns.NewService(postgres.Pool())
 	adminService := emailfinder.NewService(postgres.Pool(), nil, nil)
+	warmupAdapter := newWarmupAdapter(postgres.Pool())
 
 	server := &http.Server{
 		Addr:              ":" + cfg.AppPort,
-		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService, Admin: adminService}),
+		Handler:           apphttp.NewRouter(apphttp.Dependencies{DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService, Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService, Admin: adminService, Warmup: warmupAdapter}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

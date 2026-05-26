@@ -21,3 +21,17 @@ jobs:
           version: v1.60
       - run: go test ./... -race -count=1
       - run: go build ./cmd/api ./cmd/migrate ./cmd/worker-jobscraper ./cmd/worker-campaigntick ./cmd/worker-emailfinder ./cmd/worker-contentgen ./cmd/worker-sender ./cmd/worker-warmuprollover
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - working-directory: web
+        run: |
+          npm ci
+          npm run build

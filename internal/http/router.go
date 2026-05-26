@@ -20,6 +20,7 @@ type Dependencies struct {
 	Preferences PreferencesService
 	Campaigns   CampaignService
 	Admin       AdminService
+	Warmup      WarmupService
 }
 
 func NewRouter(deps Dependencies) http.Handler {
@@ -62,6 +63,9 @@ func NewRouter(deps Dependencies) http.Handler {
 	}
 	if deps.Auth != nil && deps.Admin != nil {
 		registerAdminRoutes(r, deps.Auth, deps.Admin)
+	}
+	if deps.Auth != nil && deps.Warmup != nil {
+		registerWarmupRoutes(r, deps.Auth, deps.Warmup)
 	}
 
 	return r

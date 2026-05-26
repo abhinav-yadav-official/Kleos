@@ -16,6 +16,8 @@ type CampaignService interface {
 	Get(ctx context.Context, userID, id string) (campaigns.WithCounts, error)
 	SetStatus(ctx context.Context, userID, id, status string) (campaigns.Campaign, error)
 	ListMatches(ctx context.Context, userID, campaignID, state string, limit, offset int) ([]campaigns.MatchRow, error)
+	ListDrafts(ctx context.Context, userID, campaignID string, limit, offset int) ([]campaigns.DraftRow, error)
+	ListSent(ctx context.Context, userID, campaignID string, limit, offset int) ([]campaigns.SentRow, error)
 }
 
 type createCampaignRequest struct {
@@ -123,6 +125,46 @@ func registerCampaignRoutes(r chi.Router, authService AuthService, svc CampaignS
 			rows = []campaigns.MatchRow{}
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"matches": rows, "limit": limit, "offset": offset})
+	})
+
+	r.Get("/api/campaigns/{id}/drafts", func(w http.ResponseWriter, r *http.Request) {
+		user, ok := authenticatedUser(w, r, authService)
+		if !ok {
+			return
+		}
+		id := chi.URLParam(r, "id")
+		limit := parseIntDefault(r.URL.Query().Get("limit"), 60, 1, 600)
+		offset := parseIntDefault(r.URL.Query().Get("offset"), 0, 0, 1_000_000)
+		rows, err := svc.ListDrafts(r.Context(), user.ID, id, limit, offset)
+		if err != nil {
+			if errors.Is(err, campaigns.ErrNotFound) {
+				writeError(w, http.StatusNotFound, "campaign_not_found", "campaign not found")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "drafts_list_failed", err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"drafts": rows, "limit": limit, "offset": offset})
+	})
+
+	r.Get("/api/campaigns/{id}/sent", func(w http.ResponseWriter, r *http.Request) {
+		user, ok := authenticatedUser(w, r, authService)
+		if !ok {
+			return
+		}
+		id := chi.URLParam(r, "id")
+		limit := parseIntDefault(r.URL.Query().Get("limit"), 50, 1, 500)
+		offset := parseIntDefault(r.URL.Query().Get("offset"), 0, 0, 1_000_000)
+		rows, err := svc.ListSent(r.Context(), user.ID, id, limit, offset)
+		if err != nil {
+			if errors.Is(err, campaigns.ErrNotFound) {
+				writeError(w, http.StatusNotFound, "campaign_not_found", "campaign not found")
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "sent_list_failed", err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"sent": rows, "limit": limit, "offset": offset})
 	})
 }
 
