@@ -41,7 +41,10 @@ export default function OnboardingRecipientsPage() {
   return (
     <>
       <Nav />
-      <h1 className="text-xl font-semibold mb-4">Onboarding · Recipients</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-semibold">Onboarding · Recipients</h1>
+        <a href="/kleos/onboarding/recipients/pool/" className="text-accent text-sm">Browse pool →</a>
+      </div>
       <p className="text-sm text-muted mb-6 max-w-2xl">
         Paste your own list of recruiter contacts. Rows land in the shared recruiter pool, so the
         email finder picks them up on the next campaign tick. One row per line:

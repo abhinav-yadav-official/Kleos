@@ -352,3 +352,21 @@ export async function addRecipients(input: {
 }): Promise<{ company_id: string; inserted: number; submitted: number }> {
   return apiFetch("/recipients", { method: "POST", body: JSON.stringify(input) });
 }
+
+export type PoolEntry = {
+  recruiter_id: string;
+  email: string;
+  name: string;
+  title: string;
+  confidence: string;
+  source: string;
+  company_slug: string;
+  company_name: string;
+  company_domain: string;
+  company_country: string;
+  created_at: string;
+};
+export async function getRecipientPool(country = "IN", limit = 200, offset = 0): Promise<PoolEntry[]> {
+  const body = await apiFetch<{ pool: PoolEntry[] }>(`/recipients/pool?country=${encodeURIComponent(country)}&limit=${limit}&offset=${offset}`);
+  return body.pool || [];
+}

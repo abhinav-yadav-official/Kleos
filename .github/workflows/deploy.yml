@@ -31,7 +31,7 @@ jobs:
       - name: Build Go binaries
         run: |
           mkdir -p dist
-          for c in api migrate worker-jobscraper worker-campaigntick worker-emailfinder worker-contentgen worker-sender worker-warmuprollover; do
+          for c in api migrate worker-jobscraper worker-campaigntick worker-emailfinder worker-contentgen worker-sender worker-warmuprollover worker-prefetchpool; do
             CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
               go build -ldflags="-s -w -X main.version=${TAG}" -o "dist/$c" "./cmd/$c"
           done
@@ -44,12 +44,13 @@ jobs:
 
       - name: Stage artifacts
         run: |
-          mkdir -p stage/{bin,migrations,deploy,web,scripts}
+          mkdir -p stage/{bin,migrations,deploy,web,scripts,seeds}
           cp dist/* stage/bin/
           cp -r migrations/* stage/migrations/
           cp -r deploy/* stage/deploy/
           cp -r web/out/* stage/web/
           cp scripts/*.sh stage/scripts/ 2>/dev/null || true
+          cp seeds/*.json stage/seeds/ 2>/dev/null || true
 
       - name: Setup SSH
         env:
@@ -73,6 +74,7 @@ jobs:
           rsync -az --delete -e "ssh -p $PORT" stage/migrations/ "$USER@$HOST:/opt/kleos/migrations/"
           rsync -az          -e "ssh -p $PORT" stage/deploy/     "$USER@$HOST:/opt/kleos/deploy/"
           rsync -az          -e "ssh -p $PORT" stage/scripts/    "$USER@$HOST:/opt/kleos/scripts/"
+          rsync -az          -e "ssh -p $PORT" stage/seeds/      "$USER@$HOST:/opt/kleos/seeds/"
 
       - name: Run deploy.sh on VPS
         env:

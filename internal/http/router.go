@@ -26,6 +26,7 @@ type Dependencies struct {
 	Warmup      WarmupService
 	Audit       AuditWriter
 	Google      GoogleDeps
+	Pool        PoolService
 }
 
 // GoogleDeps wires the Google OAuth flow when the env credentials are set.
@@ -102,6 +103,9 @@ func NewRouter(deps Dependencies) http.Handler {
 	if deps.Auth != nil && deps.Admin != nil {
 		registerAdminRoutes(r, deps.Auth, deps.Admin, audit)
 		registerRecipientsRoutes(r, deps.Auth, deps.Admin, audit)
+	}
+	if deps.Auth != nil && deps.Pool != nil {
+		registerRecipientPoolRoutes(r, deps.Auth, deps.Pool)
 	}
 	if deps.Auth != nil && deps.Warmup != nil {
 		registerWarmupRoutes(r, deps.Auth, deps.Warmup)

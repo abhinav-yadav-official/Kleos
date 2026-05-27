@@ -63,6 +63,7 @@ func main() {
 	campaignService := campaigns.NewService(postgres.Pool())
 	adminService := emailfinder.NewService(postgres.Pool(), nil, nil)
 	warmupAdapter := newWarmupAdapter(postgres.Pool())
+	poolAdapter := newPoolAdapter(postgres.Pool())
 	auditLogger := audit.NewLogger(postgres.Pool())
 
 	googleOAuth, err := auth.GoogleOAuthFromEnv(cfg.AppBaseURL)
@@ -92,6 +93,7 @@ func main() {
 			DB: postgres, Redis: redisClient, Auth: authService, SMTP: smtpService,
 			Resumes: resumeService, Preferences: preferencesService, Campaigns: campaignService,
 			Admin: adminService, Warmup: warmupAdapter, Audit: auditLogger, Google: googleDeps,
+			Pool: poolAdapter,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}

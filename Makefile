@@ -18,6 +18,7 @@ build:
 	go build -o bin/worker-contentgen ./cmd/worker-contentgen
 	go build -o bin/worker-sender ./cmd/worker-sender
 	go build -o bin/worker-warmuprollover ./cmd/worker-warmuprollover
+	go build -o bin/worker-prefetchpool ./cmd/worker-prefetchpool
 
 up:
 	docker compose -f deploy/docker-compose.dev.yml up -d

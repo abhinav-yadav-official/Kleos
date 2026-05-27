@@ -20,7 +20,7 @@ jobs:
         with:
           version: v1.60
       - run: go test ./... -race -count=1
-      - run: go build ./cmd/api ./cmd/migrate ./cmd/worker-jobscraper ./cmd/worker-campaigntick ./cmd/worker-emailfinder ./cmd/worker-contentgen ./cmd/worker-sender ./cmd/worker-warmuprollover
+      - run: go build ./cmd/api ./cmd/migrate ./cmd/worker-jobscraper ./cmd/worker-campaigntick ./cmd/worker-emailfinder ./cmd/worker-contentgen ./cmd/worker-sender ./cmd/worker-warmuprollover ./cmd/worker-prefetchpool
 
   web:
     runs-on: ubuntu-latest

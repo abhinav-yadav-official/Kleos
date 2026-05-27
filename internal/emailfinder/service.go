@@ -165,6 +165,32 @@ func (s *Service) AddToDenylist(ctx context.Context, email, reason string) error
 	return err
 }
 
+// UpsertCompanyMetadata is the rich variant used by seed loaders. It accepts
+// a display name and an optional country tag (ISO 3166-1 alpha-2). Existing
+// fields are preserved if the new value is empty.
+func (s *Service) UpsertCompanyMetadata(ctx context.Context, slug, name, careersURL, domain, githubOrg, country string) (string, error) {
+	slug = strings.ToLower(strings.TrimSpace(slug))
+	if slug == "" {
+		return "", errors.New("empty slug")
+	}
+	if strings.TrimSpace(name) == "" {
+		name = slug
+	}
+	var id string
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO companies (name, slug, domain, careers_url, github_org, country)
+		VALUES ($1, $2, NULLIF($3,''), NULLIF($4,''), NULLIF($5,''), NULLIF($6,''))
+		ON CONFLICT (slug) DO UPDATE SET
+			name        = COALESCE(NULLIF(EXCLUDED.name, ''), companies.name),
+			domain      = COALESCE(EXCLUDED.domain,      companies.domain),
+			careers_url = COALESCE(EXCLUDED.careers_url, companies.careers_url),
+			github_org  = COALESCE(EXCLUDED.github_org,  companies.github_org),
+			country     = COALESCE(EXCLUDED.country,     companies.country)
+		RETURNING id::text
+	`, name, slug, domain, careersURL, githubOrg, country).Scan(&id)
+	return id, err
+}
+
 // UpsertCompanyContact stores or updates the careers_url/domain/github_org
 // fields for an existing company. Used by the admin bulk-paste endpoint when
 // the operator provides metadata alongside recruiters.
