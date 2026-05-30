@@ -14,3 +14,11 @@ web/out/
 web/.next/
 
 .DS_Store
+
+# Hide internal notes/specs/agent docs; keep only README visible.
+*.md
+!README.md
+!AGENTS.md
+checkpoints.txt
+.agent_*
+.superpowers/
