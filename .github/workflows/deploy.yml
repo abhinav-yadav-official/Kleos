@@ -3,6 +3,8 @@ name: deploy
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "15 5 * * *"
   workflow_dispatch:
 
 jobs:
@@ -62,6 +64,27 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync source checkout on VPS
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+          USER: ${{ secrets.VPS_USER }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          ssh -p "$PORT" "$USER@$HOST" "COMMIT=$COMMIT bash -s" <<'REMOTE'
+            set -euo pipefail
+            if ! command -v git >/dev/null 2>&1; then
+              echo "git is required on the VPS for /opt/kleos/src sync" >&2
+              exit 1
+            fi
+            if [ ! -d /opt/kleos/src/.git ]; then
+              rm -rf /opt/kleos/src
+              git clone https://github.com/abhinav-yadav-official/Kleos.git /opt/kleos/src
+            fi
+            git -C /opt/kleos/src fetch --prune origin
+            git -C /opt/kleos/src reset --hard "$COMMIT"
+          REMOTE
 
       - name: Rsync to VPS
         env:
