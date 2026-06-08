@@ -62,7 +62,7 @@ func registerRecipientsRoutes(r chi.Router, authService AuthService, svc AdminSe
 // PoolService is the narrow surface the pool endpoint needs from a backing
 // store (currently fulfilled by a thin pgxpool adapter in cmd/api).
 type PoolService interface {
-	ListPool(ctx context.Context, country string, limit, offset int) ([]PoolEntry, error)
+	ListPool(ctx context.Context, country string, limit, offset int) ([]PoolEntry, int, error)
 }
 
 type PoolEntry struct {
@@ -76,6 +76,11 @@ type PoolEntry struct {
 	CompanyName    string    `json:"company_name"`
 	CompanyDomain  string    `json:"company_domain"`
 	CompanyCountry string    `json:"company_country"`
+	CompanyType    string    `json:"company_type"`
+	CompanySize    string    `json:"company_size"`
+	CompanyLocation string   `json:"company_location"`
+	Phone          string    `json:"phone"`
+	Mobile         string    `json:"mobile"`
 	CreatedAt      time.Time `json:"created_at"`
 }
 
@@ -93,15 +98,16 @@ func registerRecipientPoolRoutes(r chi.Router, authService AuthService, pool Poo
 		}
 		limit := parseIntDefault(r.URL.Query().Get("limit"), 200, 1, 1000)
 		offset := parseIntDefault(r.URL.Query().Get("offset"), 0, 0, 1_000_000)
-		entries, err := pool.ListPool(r.Context(), country, limit, offset)
+		entries, total, err := pool.ListPool(r.Context(), country, limit, offset)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "pool_list_failed", err.Error())
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
-			"pool":   entries,
-			"limit":  limit,
-			"offset": offset,
+			"total":   total,
+			"pool":    entries,
+			"limit":   limit,
+			"offset":  offset,
 			"country": country,
 		})
 	})

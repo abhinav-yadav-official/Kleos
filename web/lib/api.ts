@@ -364,9 +364,14 @@ export type PoolEntry = {
   company_name: string;
   company_domain: string;
   company_country: string;
+  company_type: string;
+  company_size: string;
+  company_location: string;
+  phone: string;
+  mobile: string;
   created_at: string;
 };
-export async function getRecipientPool(country = "IN", limit = 200, offset = 0): Promise<PoolEntry[]> {
-  const body = await apiFetch<{ pool: PoolEntry[] }>(`/recipients/pool?country=${encodeURIComponent(country)}&limit=${limit}&offset=${offset}`);
-  return body.pool || [];
+export async function getRecipientPool(country = "IN", limit = 200, offset = 0): Promise<{ pool: PoolEntry[]; total: number; limit: number; offset: number }> {
+  const body = await apiFetch<{ pool: PoolEntry[]; total: number; limit: number; offset: number }>(`/recipients/pool?country=${encodeURIComponent(country)}&limit=${limit}&offset=${offset}`);
+  return body;
 }

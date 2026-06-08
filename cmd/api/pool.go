@@ -18,12 +18,16 @@ func newPoolAdapter(pool *pgxpool.Pool) *poolAdapter {
 // ListPool returns recruiters in the shared pool whose company.country matches
 // the requested ISO code. Denylisted and blocked recruiters are filtered out.
 // Ordered by highest confidence first, newest first.
-func (a *poolAdapter) ListPool(ctx context.Context, country string, limit, offset int) ([]apphttp.PoolEntry, error) {
+func (a *poolAdapter) ListPool(ctx context.Context, country string, limit, offset int) ([]apphttp.PoolEntry, int, error) {
+	var total int
 	rows, err := a.pool.Query(ctx, `
 		SELECT r.id::text, r.email::text, COALESCE(r.name, ''), COALESCE(r.title, ''),
 			r.confidence, r.source,
 			c.slug, COALESCE(c.name, ''), COALESCE(c.domain, ''), COALESCE(c.country, ''),
-			r.created_at
+			COALESCE(c.company_type, ''), COALESCE(c.company_size, ''), COALESCE(c.company_location, ''),
+			COALESCE(r.phone, ''), COALESCE(r.mobile, ''),
+			r.created_at,
+			COUNT(*) OVER() AS total
 		FROM recruiters r
 		JOIN companies c ON c.id = r.company_id
 		WHERE c.country = $1
@@ -38,17 +42,20 @@ func (a *poolAdapter) ListPool(ctx context.Context, country string, limit, offse
 		LIMIT $2 OFFSET $3
 	`, country, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 	out := []apphttp.PoolEntry{}
 	for rows.Next() {
 		var e apphttp.PoolEntry
 		if err := rows.Scan(&e.RecruiterID, &e.Email, &e.Name, &e.Title, &e.Confidence, &e.Source,
-			&e.CompanySlug, &e.CompanyName, &e.CompanyDomain, &e.CompanyCountry, &e.CreatedAt); err != nil {
-			return nil, err
+			&e.CompanySlug, &e.CompanyName, &e.CompanyDomain, &e.CompanyCountry,
+			&e.CompanyType, &e.CompanySize, &e.CompanyLocation,
+			&e.Phone, &e.Mobile,
+			&e.CreatedAt, &total); err != nil {
+			return nil, 0, err
 		}
 		out = append(out, e)
 	}
-	return out, rows.Err()
+	return out, total, rows.Err()
 }

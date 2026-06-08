@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, ErrorBanner, Input, Label } from "@/components/ui";
 import { ApiException, getAccess, login, setTokens, signup } from "@/lib/api";
+import { KlIcon } from "@/components/Logo";
 
 type Mode = "login" | "signup";
 
@@ -54,20 +55,22 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 mt-12">
+    <div className="min-h-[calc(100vh-3rem)] flex items-center">
+      <div className="grid gap-8 md:grid-cols-2 w-full">
       <section>
-        <h1 className="text-4xl font-semibold leading-tight">
-          Kleos
-        </h1>
-        <p className="text-muted mt-3 max-w-md">
-          Automated recruiter outreach. Scrape jobs, find the right contact,
-          draft a tailored email per role, send with warm-up — without losing
-          your inbox.
+        <div className="flex items-center gap-3">
+          <KlIcon className="w-10 h-10 text-accent" />
+          <h1 className="text-4xl font-semibold leading-tight">Kleos</h1>
+        </div>
+        <p className="text-muted mt-3 max-w-md text-sm leading-relaxed">
+          Kleos is your automated job outreach assistant. It discovers jobs
+          that match you, finds recruiter emails, and sends tailored
+          messages — all while protecting your sender reputation.
         </p>
         <ul className="mt-6 space-y-2 text-sm text-muted">
-          <li>• You bring SMTP + resume + preferences.</li>
-          <li>• Kleos matches jobs, drafts emails per match, and sends one at a time.</li>
-          <li>• 3-variant generation with spam self-check picks the safest send.</li>
+          <li>• You bring your own email and resume.</li>
+          <li>• Kleos finds roles, drafts personalized outreach per match, and sends gradually.</li>
+          <li>• Spam scoring picks the safest variant before every send.</li>
         </ul>
       </section>
 
@@ -137,6 +140,7 @@ export default function LandingPage() {
           <a href="/kleos/privacy/" className="text-accent underline">privacy</a> terms.
         </p>
       </Card>
+    </div>
     </div>
   );
 }

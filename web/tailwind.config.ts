@@ -10,7 +10,7 @@ const config: Config = {
         border: "#1f2630",
         text: "#e6edf3",
         muted: "#8b96a3",
-        accent: "#7c9cff",
+        accent: "#2dd4bf",
         ok: "#3fb950",
         warn: "#d29922",
         err: "#f85149",

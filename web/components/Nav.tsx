@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { clearTokens, getAccess, logout, me, User } from "@/lib/api";
+import { KlIcon } from "@/components/Logo";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
@@ -30,7 +31,10 @@ export function Nav() {
   return (
     <header className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="text-lg font-semibold">Kleos</Link>
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <KlIcon className="w-7 h-7 text-accent" />
+          <span className="text-lg font-semibold">Kleos</span>
+        </Link>
         <nav className="flex gap-2 text-sm">
           {links.map((l) => {
             const active = pathname?.startsWith(l.href);

@@ -12,7 +12,7 @@ docker run --rm \
   -v "$APP_DIR/logs:/logs" \
   alpine:3.20 sh -c 'chown -R 10001:10001 /data /logs'
 
-docker build \
+docker build --load \
   -t "kleos/api:${TAG}" \
   -f "$APP_DIR/deploy/Dockerfile.runtime" \
   --build-arg BINARY=api \

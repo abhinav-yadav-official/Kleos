@@ -5,6 +5,9 @@ import { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Kleos",
   description: "Automated job outreach — scrape, find, generate, send.",
+  icons: {
+    icon: "/kleos/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
