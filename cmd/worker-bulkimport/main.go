@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/db"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -63,11 +63,27 @@ func main() {
 
 	r := csv.NewReader(f)
 	r.LazyQuotes = true
+	r.FieldsPerRecord = -1
 
-	// read header row to map columns
-	header, err := r.Read()
-	if err != nil {
-		slog.Error("read csv header", "error", err)
+	// skip comment lines and empty lines before header
+	var header []string
+	for {
+		peek, err := r.Read()
+		if err != nil {
+			slog.Error("read csv header", "error", err)
+			os.Exit(1)
+		}
+		if len(peek) == 1 && len(peek[0]) > 0 && peek[0][0] == '#' {
+			continue
+		}
+		if len(peek) == 1 && peek[0] == "" {
+			continue
+		}
+		header = peek
+		break
+	}
+	if len(header) < 3 {
+		slog.Error("unexpected header", "header", header)
 		os.Exit(1)
 	}
 	col := buildColMap(header)
@@ -85,14 +101,14 @@ func main() {
 			continue
 		}
 		row := csvRow{
-			ContactEmail: colVal(rec, col, "Contact Email"),
-			Title:        colVal(rec, col, "Title"),
-			FirstName:    colVal(rec, col, "First Name"),
-			LastName:     colVal(rec, col, "Last Name"),
-			JobTitle:     colVal(rec, col, "Job Title"),
-			CompanyName:  strings.TrimSpace(colVal(rec, col, "Company Name")),
-			Phone:        colVal(rec, col, "Phone"),
-			Mobile:       colVal(rec, col, "Mobile"),
+			ContactEmail: colValMulti(rec, col, []string{"Contact Email", "Email"}),
+			Title:        colValMulti(rec, col, []string{"Title"}),
+			FirstName:    colValMulti(rec, col, []string{"First Name", "Name"}),
+			LastName:     colValMulti(rec, col, []string{"Last Name"}),
+			JobTitle:     colValMulti(rec, col, []string{"Job Title", "Title"}),
+			CompanyName:  strings.TrimSpace(colValMulti(rec, col, []string{"Company Name", "Company"})),
+			Phone:        colValMulti(rec, col, []string{"Phone", "Mobile"}),
+			Mobile:       colValMulti(rec, col, []string{"Mobile", "Phone"}),
 			CompanyType:  colVal(rec, col, "Company Type"),
 			CompanySize:  colVal(rec, col, "Company Size"),
 			CompanyLoc:   colVal(rec, col, "Company Location"),
@@ -228,6 +244,15 @@ func colVal(row []string, col map[string]int, name string) string {
 		return ""
 	}
 	return strings.TrimSpace(row[idx])
+}
+
+func colValMulti(row []string, col map[string]int, names []string) string {
+	for _, name := range names {
+		if v := colVal(row, col, name); v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 func countRows(groups map[string]*companyGroup) int {

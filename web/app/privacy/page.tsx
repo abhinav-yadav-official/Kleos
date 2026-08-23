@@ -56,7 +56,7 @@ export default function PrivacyPage() {
 
       <h2 className="text-lg font-semibold mt-6">Contact</h2>
       <p className="text-sm">
-        Open an issue at <a href="https://github.com/abhinav-yadav-official/Kleos/issues" className="text-accent">github.com/abhinav-yadav-official/Kleos</a>.
+        Open an issue at <a href="https://github.com/almostturingcomplete/Kleos/issues" className="text-accent">github.com/almostturingcomplete/Kleos</a>.
       </p>
     </div>
   );

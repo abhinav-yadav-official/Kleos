@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/emailfinder"
+	"github.com/almostturingcomplete/Kleos/internal/emailfinder"
 	"github.com/go-chi/chi/v5"
 )
 

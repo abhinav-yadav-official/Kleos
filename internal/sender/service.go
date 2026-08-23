@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/crypto"
+	"github.com/almostturingcomplete/Kleos/internal/crypto"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

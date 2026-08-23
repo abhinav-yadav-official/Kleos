@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/resume"
+	"github.com/almostturingcomplete/Kleos/internal/resume"
 )
 
 type fakeResumeService struct {

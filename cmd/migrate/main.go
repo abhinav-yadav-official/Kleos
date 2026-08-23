@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 )

@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
-	"github.com/abhinav-yadav-official/Kleos/internal/scraper"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/scraper"
 )
 
 // One-shot job scraper CLI.

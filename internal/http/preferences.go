@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/preferences"
+	"github.com/almostturingcomplete/Kleos/internal/preferences"
 	"github.com/go-chi/chi/v5"
 )
 

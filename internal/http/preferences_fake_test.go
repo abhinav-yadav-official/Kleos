@@ -3,7 +3,7 @@ package apphttp
 import (
 	"context"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/preferences"
+	"github.com/almostturingcomplete/Kleos/internal/preferences"
 )
 
 type fakePreferencesService struct {

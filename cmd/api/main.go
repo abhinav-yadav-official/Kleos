@@ -11,17 +11,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/audit"
-	"github.com/abhinav-yadav-official/Kleos/internal/auth"
-	"github.com/abhinav-yadav-official/Kleos/internal/campaigns"
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
-	"github.com/abhinav-yadav-official/Kleos/internal/emailfinder"
-	apphttp "github.com/abhinav-yadav-official/Kleos/internal/http"
-	"github.com/abhinav-yadav-official/Kleos/internal/preferences"
-	"github.com/abhinav-yadav-official/Kleos/internal/resume"
-	"github.com/abhinav-yadav-official/Kleos/internal/smtpcred"
+	"github.com/almostturingcomplete/Kleos/internal/audit"
+	"github.com/almostturingcomplete/Kleos/internal/auth"
+	"github.com/almostturingcomplete/Kleos/internal/campaigns"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	appcrypto "github.com/almostturingcomplete/Kleos/internal/crypto"
+	"github.com/almostturingcomplete/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/emailfinder"
+	apphttp "github.com/almostturingcomplete/Kleos/internal/http"
+	"github.com/almostturingcomplete/Kleos/internal/preferences"
+	"github.com/almostturingcomplete/Kleos/internal/resume"
+	"github.com/almostturingcomplete/Kleos/internal/smtpcred"
 )
 
 func main() {

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
+	appcrypto "github.com/almostturingcomplete/Kleos/internal/crypto"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"

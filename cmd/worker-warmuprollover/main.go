@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
-	"github.com/abhinav-yadav-official/Kleos/internal/sender"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/sender"
 )
 
 // One-shot daily warmup rollover: for every non-paused warmup_state row whose

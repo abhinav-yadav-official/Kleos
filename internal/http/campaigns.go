@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/campaigns"
+	"github.com/almostturingcomplete/Kleos/internal/campaigns"
 	"github.com/go-chi/chi/v5"
 )
 

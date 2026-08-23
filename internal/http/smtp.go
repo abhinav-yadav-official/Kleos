@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/smtpcred"
+	"github.com/almostturingcomplete/Kleos/internal/smtpcred"
 	"github.com/go-chi/chi/v5"
 )
 

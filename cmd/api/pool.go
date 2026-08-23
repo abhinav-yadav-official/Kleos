@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	apphttp "github.com/abhinav-yadav-official/Kleos/internal/http"
+	apphttp "github.com/almostturingcomplete/Kleos/internal/http"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

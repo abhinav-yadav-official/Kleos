@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	"github.com/abhinav-yadav-official/Kleos/internal/contentgen"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/contentgen"
+	"github.com/almostturingcomplete/Kleos/internal/db"
 )
 
 // One-shot content generator: walks campaign_matches in state='email_found'

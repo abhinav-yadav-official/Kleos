@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/preferences"
+	"github.com/almostturingcomplete/Kleos/internal/preferences"
 )
 
 func TestPreferencesRoutesGetAndPutRoundTrip(t *testing.T) {

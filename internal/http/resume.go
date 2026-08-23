@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/resume"
+	"github.com/almostturingcomplete/Kleos/internal/resume"
 	"github.com/go-chi/chi/v5"
 )
 

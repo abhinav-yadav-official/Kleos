@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/smtpcred"
+	"github.com/almostturingcomplete/Kleos/internal/smtpcred"
 )
 
 type fakeSMTPService struct {

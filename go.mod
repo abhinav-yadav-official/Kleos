@@ -1,4 +1,4 @@
-module github.com/abhinav-yadav-official/Kleos
+module github.com/almostturingcomplete/Kleos
 
 go 1.23.0
 

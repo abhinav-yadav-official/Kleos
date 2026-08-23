@@ -9,10 +9,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	appcrypto "github.com/abhinav-yadav-official/Kleos/internal/crypto"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
-	"github.com/abhinav-yadav-official/Kleos/internal/sender"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	appcrypto "github.com/almostturingcomplete/Kleos/internal/crypto"
+	"github.com/almostturingcomplete/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/sender"
 )
 
 // One-shot sender: walks campaign_matches in state='generated' for active

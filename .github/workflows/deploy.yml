@@ -80,7 +80,7 @@ jobs:
             fi
             if [ ! -d /opt/kleos/src/.git ]; then
               rm -rf /opt/kleos/src
-              git clone https://github.com/abhinav-yadav-official/Kleos.git /opt/kleos/src
+              git clone https://github.com/almostturingcomplete/Kleos.git /opt/kleos/src
             fi
             git -C /opt/kleos/src fetch --prune origin
             git -C /opt/kleos/src reset --hard "$COMMIT"

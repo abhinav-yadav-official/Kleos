@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/auth"
+	"github.com/almostturingcomplete/Kleos/internal/auth"
 )
 
 type fakeAuthService struct {

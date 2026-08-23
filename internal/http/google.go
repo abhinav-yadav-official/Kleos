@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/auth"
+	"github.com/almostturingcomplete/Kleos/internal/auth"
 	"github.com/go-chi/chi/v5"
 )
 

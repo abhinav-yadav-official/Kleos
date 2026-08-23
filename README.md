@@ -5,7 +5,7 @@
 **Privacy-first job-outreach platform — run recruiter outreach from your own email.**
 
 [![Live App](https://img.shields.io/badge/Live%20App-abhiyadav.in%2Fkleos-2ea44f?style=for-the-badge)](https://abhiyadav.in/kleos/)
-[![Release](https://img.shields.io/github/v/release/abhinav-yadav-official/Kleos?style=for-the-badge)](https://github.com/abhinav-yadav-official/Kleos/releases)
+[![Release](https://img.shields.io/github/v/release/almostturingcomplete/Kleos?style=for-the-badge)](https://github.com/almostturingcomplete/Kleos/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.23-00ADD8?style=for-the-badge&logo=go&logoColor=white)](go.mod)
 
@@ -39,7 +39,7 @@ Kleos is a public-signup SaaS for structured, privacy-first job outreach. You co
 Prereqs: Go 1.23+, Docker, PostgreSQL.
 
 ```sh
-git clone https://github.com/abhinav-yadav-official/Kleos.git
+git clone https://github.com/almostturingcomplete/Kleos.git
 cd Kleos
 cp .env.example .env        # fill secrets (JWT, encryption key, DB)
 make                        # build / run targets — see Makefile

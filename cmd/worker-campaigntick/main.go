@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/campaigns"
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/campaigns"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/db"
 )
 
 // One-shot campaign tick: for every active campaign, score unmatched jobs

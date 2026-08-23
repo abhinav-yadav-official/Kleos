@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/abhinav-yadav-official/Kleos/internal/config"
-	"github.com/abhinav-yadav-official/Kleos/internal/db"
-	"github.com/abhinav-yadav-official/Kleos/internal/emailfinder"
+	"github.com/almostturingcomplete/Kleos/internal/config"
+	"github.com/almostturingcomplete/Kleos/internal/db"
+	"github.com/almostturingcomplete/Kleos/internal/emailfinder"
 )
 
 // Reads a JSON seed file of company metadata, upserts each into companies with
